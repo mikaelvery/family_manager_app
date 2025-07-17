@@ -1,0 +1,86 @@
+name: family_manager_app
+description: "A new Flutter project."
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: ^5.6.8
+  firebase_core: ^3.13.1
+  flutter_local_notifications: ^19.2.1
+  flutter_dotenv: ^5.2.1
+  google_fonts: ^6.2.1
+  flutter_login: ^5.0.0
+  firebase_auth: ^5.5.4
+  shared_preferences: ^2.5.3
+  flutter_launcher_icons: ^0.14.3
+  firebase_messaging: ^15.2.6
+  syncfusion_flutter_pdfviewer: ^29.2.7
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.1
+  intl: ^0.20.2
+  mailer: ^6.4.1
+  simple_animations:
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^5.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    # - assets/fonts/Roboto-Regular.ttf
+    # - assets/fonts/Roboto-Bold.ttf
+    - assets/login_logo.png
+    - .env
+    - .env.local
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto-Regular.ttf
+        - asset: assets/fonts/Roboto-Bold.ttf
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
+# flutter_icons:
+#   android: true
+#   ios: false
+#   image_path: "assets/images/logo-gg-devis-appbar.png"
