@@ -25,10 +25,7 @@ dependencies:
   url_launcher: ^6.3.1
   intl: ^0.20.2
   mailer: ^6.4.1
-  simple_animations:
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
 dev_dependencies:

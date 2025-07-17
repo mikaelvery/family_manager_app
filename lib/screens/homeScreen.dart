@@ -66,7 +66,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   _UpcomingCard(
                     title: 'Prochain RDV',
-                    subtitle: 'Dentiste pour Léo - 18 Juillet à 10h',
+                    subtitle: 'Dentiste pour Mattéo - 03 Septembre à 08h45',
                     colors: [Color(0xFF56CCF2), Color(0xFF2F80ED)],
                   ),
                   const SizedBox(height: 16),
@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _UpcomingCard(
                     title: 'Document expirant',
-                    subtitle: 'CNI de Mila - expire le 20 Juillet',
+                    subtitle: 'CNI de Mika - expire le 20 Juillet',
                     colors: [Color(0xFFFFA17F), Color(0xFFFFE259)],
                   ),
                 ],

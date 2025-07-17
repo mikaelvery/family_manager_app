@@ -1,6 +1,10 @@
-import 'package:family_manager_app/screens/HomeScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // <-- Firestore
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:family_manager_app/screens/HomeScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,42 +14,153 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _nameController = TextEditingController(); // <-- ajouté
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _error;
+  bool _rememberMe = false;
+  bool _obscurePassword = true;
 
-  Future<void> _login() async {
+  // true = connexion, false = inscription
+  bool _isLogin = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMe();
+  }
+
+  Future<void> _loadRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _rememberMe = prefs.getBool('remember_me') ?? false;
+      if (_rememberMe) {
+        _emailController.text = prefs.getString('email') ?? '';
+      }
+    });
+  }
+
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setBool('remember_me', true);
+      await prefs.setString('email', _emailController.text.trim());
+    } else {
+      await prefs.remove('remember_me');
+      await prefs.remove('email');
+    }
+  }
+
+  Future<void> _submit() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      if (_isLogin) {
+        // Connexion
+        final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      Navigator.pushReplacement(context,
-        MaterialPageRoute(builder: (_) => HomeScreen()));
+        // Enregistrement "Remember Me"
+        await _saveCredentials();
+
+        // Naviguer vers HomeScreen (par ex.)
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        // Inscription
+        final name = _nameController.text.trim();
+        if (name.isEmpty) {
+          setState(() {
+            _error = 'Veuillez saisir votre nom.';
+            _isLoading = false;
+          });
+          return;
+        }
+
+        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        final uid = userCredential.user!.uid;
+        final email = userCredential.user!.email;
+
+        // Création document Firestore users/uid
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'email': email,
+          'name': name,
+          'createdAt': Timestamp.now(),
+        });
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Compte créé avec succès, veuillez vous connecter.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Vider champs et switch vers connexion
+        setState(() {
+          _isLogin = true;
+          _nameController.clear();
+          _emailController.clear();
+          _passwordController.clear();
+          _rememberMe = false;
+          _isLoading = false;
+          _error = null;
+        });
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'user-not-found') {
           _error = 'Aucun utilisateur trouvé pour cet email.';
         } else if (e.code == 'wrong-password') {
           _error = 'Mot de passe incorrect.';
+        } else if (e.code == 'email-already-in-use') {
+          _error = 'Cet email est déjà utilisé.';
+        } else if (e.code == 'weak-password') {
+          _error = 'Mot de passe trop faible.';
         } else {
           _error = e.message ?? 'Erreur inconnue.';
         }
+        _isLoading = false;
       });
-    } catch (e) {
+    } catch (_) {
       setState(() {
         _error = 'Une erreur est survenue.';
+        _isLoading = false;
       });
-    } finally {
-      setState(() => _isLoading = false);
     }
+  }
+
+  void _toggleMode(int index) {
+    setState(() {
+      _isLogin = index == 0;
+      _error = null;
+      _emailController.clear();
+      _passwordController.clear();
+      _nameController.clear();
+      if (!_isLogin) {
+        _rememberMe = false;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -59,13 +174,13 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/login_logo.png', height: 150),
+                Image.asset('assets/login_logo.png', height: 200),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 ToggleButtons(
-                  isSelected: const [true, false],
-                  onPressed: (_) {},
+                  isSelected: [_isLogin, !_isLogin],
+                  onPressed: _toggleMode,
                   borderRadius: BorderRadius.circular(30),
                   selectedColor: Colors.white,
                   color: Colors.white,
@@ -73,11 +188,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: const [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text('Existing'),
+                      child: Text('Connexion'),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text('New'),
+                      child: Text('Inscription'),
                     ),
                   ],
                 ),
@@ -92,35 +207,91 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Column(
                     children: [
+                      if (!_isLogin)
+                        TextField(
+                          controller: _nameController,
+                          textInputAction: TextInputAction.next,
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.person, color: Colors.black),
+                            labelText: 'Prénom',
+                          ),
+                        ),
+
+                      if (!_isLogin)
+                        const SizedBox(height: 20),
+
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autocorrect: false,
+                        autofillHints: const [AutofillHints.email],
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.email),
-                          labelText: 'Email Address',
+                          prefixIcon: Icon(Icons.email, color: Colors.black),
+                          labelText: 'Email',
                         ),
                       ),
                       const SizedBox(height: 20),
                       TextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.lock),
-                          labelText: 'Password',
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        autocorrect: false,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.lock, color: Colors.black),
+                          labelText: 'Mot de passe',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: Colors.black,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 20),
 
-                      if (_error != null)
-                        Text(
-                          _error!,
-                          style: const TextStyle(color: Colors.red),
+                      const SizedBox(height: 10),
+
+                      if (_isLogin)
+                        Theme(
+                          data: Theme.of(context).copyWith(
+                            unselectedWidgetColor: Colors.black, // couleur bordure décochée
+                          ),
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) {
+                                  setState(() => _rememberMe = value ?? false);
+                                },
+                                activeColor: const Color(0xFFFF5F6D), // rose/rouge quand coché
+                                checkColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                  side: const BorderSide(color: Colors.black),
+                                ),
+                              ),
+                              const Text("Se souvenir de moi")
+                            ],
+                          ),
                         ),
 
-                      const SizedBox(height: 20),
+                      if (_error != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Text(
+                            _error!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
 
                       GestureDetector(
-                        onTap: _isLoading ? null : _login,
+                        onTap: _isLoading ? null : _submit,
                         child: Container(
                           width: double.infinity,
                           height: 50,
@@ -131,7 +302,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
+                                color: Colors.black.withOpacity(0.2),
                                 blurRadius: 5,
                                 offset: const Offset(0, 3),
                               )
@@ -140,9 +311,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.center,
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                                  'LOGIN',
-                                  style: TextStyle(
+                              : Text(
+                                  _isLogin ? 'Se connecter' : 'Créer un compte',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -154,36 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    // TODO: implémenter reset password
-                  },
-                  child: const Text(
-                    "Forgot Password?",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-                const Text("Or", style: TextStyle(color: Colors.white)),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.facebook, color: Colors.blue),
-                    ),
-                    SizedBox(width: 20),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.white,
-                      child: Icon(Icons.g_mobiledata, color: Colors.red),
-                    ),
-                  ],
-                )
+                const SizedBox(height: 100),
               ],
             ),
           ),

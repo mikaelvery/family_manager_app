@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart'; 
 
 void main() async {
@@ -16,11 +17,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Notre Famille ♡',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+        theme: ThemeData(
+          textTheme: GoogleFonts.montserratTextTheme(),
+          primaryColor: const Color(0xFFFF866E),
+          inputDecorationTheme: InputDecorationTheme(
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: const Color(0xFFFF5F6D), width: 2),
+            ),
+            labelStyle: TextStyle(color: Colors.grey[700]),
+            floatingLabelStyle: TextStyle(color: const Color(0xFFFF5F6D)),
+            prefixIconColor: const Color(0xFFFF5F6D),
+          ),
+          checkboxTheme: CheckboxThemeData(
+            fillColor: WidgetStateProperty.all(const Color(0xFFFF5F6D)),
+          ),
+        ),
+
       home: const LoginScreen(), 
     );
   }
