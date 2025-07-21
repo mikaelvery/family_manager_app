@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DocumentsScreen extends StatelessWidget {
-  const DocumentsScreen({Key? key}) : super(key: key);
+  const DocumentsScreen({super.key});
 
   Future<void> _openDocumentUrl(String url) async {
     final uri = Uri.parse(url);
@@ -108,16 +108,16 @@ class DocumentsScreen extends StatelessWidget {
                   ...documents.map((doc) {
                     final docData = doc.data() as Map<String, dynamic>;
                     final String personName = docData.containsKey('personName') &&
-                            docData['personName'] != null &&
-                            docData['personName'].toString().isNotEmpty
-                        ? docData['personName']
-                        : 'Famille';
+                      docData['personName'] != null &&
+                      docData['personName'].toString().isNotEmpty
+                      ? docData['personName']
+                      : 'Famille';
                     final String fileName = docData['name'] ?? 'Nom inconnu';
                     final String url = docData['url'] ?? '';
                     final Timestamp timestamp = docData['uploadedAt'] ?? Timestamp.now();
                     final DateTime date = timestamp.toDate();
                     final String formattedDate =
-                        DateFormat('dd MMM yyyy', 'fr_FR').format(date);
+                      DateFormat('dd MMM yyyy', 'fr_FR').format(date);
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -206,20 +206,20 @@ class DocumentsScreen extends StatelessWidget {
                                         onPressed: () async {
                                           try {
                                             await FirebaseFirestore.instance
-                                                .collection('documents')
-                                                .doc(doc.id)
-                                                .delete();
+                                              .collection('documents')
+                                              .doc(doc.id)
+                                              .delete();
                                             Navigator.of(ctx).pop();
                                             ScaffoldMessenger.of(context)
-                                                .showSnackBar(const SnackBar(
-                                                    content: Text(
-                                                        'Document supprimé')));
+                                              .showSnackBar(const SnackBar(
+                                            content: Text(
+                                            'Document supprimé')));
                                           } catch (e) {
                                             Navigator.of(ctx).pop();
                                             ScaffoldMessenger.of(context)
-                                                .showSnackBar(SnackBar(
-                                                    content: Text(
-                                                        'Erreur : $e')));
+                                              .showSnackBar(SnackBar(
+                                              content: Text(
+                                            'Erreur : $e')));
                                           }
                                         },
                                       ),

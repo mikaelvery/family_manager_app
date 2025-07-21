@@ -62,6 +62,7 @@ flutter:
     - assets/login_logo.png
     - assets/avatar_homme.png
     - assets/avatar_femme.png
+    - assets/icon.png
     - .env
     - .env.local
 
@@ -88,3 +89,8 @@ flutter:
 #   android: true
 #   ios: false
 #   image_path: "assets/images/logo-gg-devis-appbar.png"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/login_logo.png"

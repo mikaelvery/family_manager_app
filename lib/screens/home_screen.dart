@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
                   GridView.count(
                     crossAxisCount: 2,
-                    childAspectRatio: 1.65,
+                    childAspectRatio: 1.55,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
                     shrinkWrap: true,
