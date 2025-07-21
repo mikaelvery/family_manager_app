@@ -1,10 +1,8 @@
+import 'package:family_manager_app/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // <-- Firestore
-import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:family_manager_app/screens/HomeScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,15 +12,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _nameController = TextEditingController(); // <-- ajouté
+  final _nameController = TextEditingController(); 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _error;
   bool _rememberMe = false;
   bool _obscurePassword = true;
-
-  // true = connexion, false = inscription
   bool _isLogin = true;
 
   @override
@@ -61,15 +57,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       if (_isLogin) {
         // Connexion
-        final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        // final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        //   email: _emailController.text.trim(),
+        //   password: _passwordController.text.trim(),
+        // );
 
         // Enregistrement "Remember Me"
         await _saveCredentials();
 
-        // Naviguer vers HomeScreen (par ex.)
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -260,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (_isLogin)
                         Theme(
                           data: Theme.of(context).copyWith(
-                            unselectedWidgetColor: Colors.black, // couleur bordure décochée
+                            unselectedWidgetColor: Colors.black, 
                           ),
                           child: Row(
                             children: [
@@ -269,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onChanged: (value) {
                                   setState(() => _rememberMe = value ?? false);
                                 },
-                                activeColor: const Color(0xFFFF5F6D), // rose/rouge quand coché
+                                activeColor: const Color(0xFFFF5F6D), 
                                 checkColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
@@ -302,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 5,
                                 offset: const Offset(0, 3),
                               )

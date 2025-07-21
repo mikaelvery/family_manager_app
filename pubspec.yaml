@@ -27,6 +27,8 @@ dependencies:
   mailer: ^6.4.1
 
   cupertino_icons: ^1.0.8
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +57,8 @@ flutter:
     # - assets/fonts/Roboto-Regular.ttf
     # - assets/fonts/Roboto-Bold.ttf
     - assets/login_logo.png
+    - assets/avatar_homme.png
+    - assets/avatar_femme.png
     - .env
     - .env.local
 

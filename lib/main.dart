@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart'; 
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,17 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Notre Famille ♡',
       debugShowCheckedModeBanner: false,
+      locale: const Locale('fr'), // <-- Forcer le français
+        supportedLocales: const [
+          Locale('fr'),
+          Locale('en'),
+          // Ajoute d'autres si nécessaire
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],  
         theme: ThemeData(
           textTheme: GoogleFonts.montserratTextTheme(),
           primaryColor: const Color(0xFFFF866E),
