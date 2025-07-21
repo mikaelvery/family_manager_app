@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:family_manager_app/screens/documents_screen';
+import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -240,11 +242,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.add_to_drive,
                         [Color(0xFFB2F5EA), Color(0xFFAFE9CE)],
                         textColor: Colors.black87,
+                        onTap: () async {
+                          await pickAndUploadDocument(context);
+                        },
                       ),
-                      buildActionButton('Mes documents', Icons.folder, [
-                        Color(0xFF00C9A7),
-                        Color(0xFF92FE9D),
-                      ]),
+                      buildActionButton(
+                        'Mes documents',
+                        Icons.folder,
+                        [
+                          Color(0xFF00C9A7),
+                          Color(0xFF92FE9D),
+                        ],
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                          );
+                        },
+                      ),
                       buildActionButton(
                         'Ajouter tâche',
                         Icons.playlist_add_check,

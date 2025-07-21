@@ -25,7 +25,10 @@ dependencies:
   url_launcher: ^6.3.1
   intl: ^0.20.2
   mailer: ^6.4.1
-
+  file_picker: ^10.2.0
+  firebase_storage: ^12.4.10
+  path: ^1.9.1
+  
   cupertino_icons: ^1.0.8
   flutter_localizations:
     sdk: flutter
