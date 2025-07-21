@@ -28,7 +28,9 @@ dependencies:
   file_picker: ^10.2.0
   firebase_storage: ^12.4.10
   path: ^1.9.1
-  
+  dio: ^5.8.0+1
+  open_filex: ^4.7.0
+
   cupertino_icons: ^1.0.8
   flutter_localizations:
     sdk: flutter

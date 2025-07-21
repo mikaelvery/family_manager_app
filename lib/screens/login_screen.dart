@@ -1,7 +1,8 @@
 import 'package:family_manager_app/screens/home_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _nameController = TextEditingController(); 
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
@@ -49,27 +50,34 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
 
-    try {
-      if (_isLogin) {
-        // Connexion
-        // final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        //   email: _emailController.text.trim(),
-        //   password: _passwordController.text.trim(),
-        // );
-
-        // Enregistrement "Remember Me"
-        await _saveCredentials();
-
+  try {
+    if (_isLogin) {
+      // Connexion
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      final user = userCredential.user;
+      if (user != null) {
+        print('Connexion réussie UID : ${user.uid}');
+        await _saveCredentials(); 
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       } else {
+        setState(() {
+          _error = 'Erreur lors de la connexion.';
+          _isLoading = false;
+        });
+      }
+    } else {
         // Inscription
         final name = _nameController.text.trim();
         if (name.isEmpty) {
@@ -80,10 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        final userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
 
         final uid = userCredential.user!.uid;
         final email = userCredential.user!.email;
@@ -195,7 +204,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 30),
 
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 30,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -212,8 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                      if (!_isLogin)
-                        const SizedBox(height: 20),
+                      if (!_isLogin) const SizedBox(height: 20),
 
                       TextField(
                         controller: _emailController,
@@ -234,11 +245,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         autocorrect: false,
                         autofillHints: const [AutofillHints.password],
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.lock, color: Colors.black),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.black,
+                          ),
                           labelText: 'Mot de passe',
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               color: Colors.black,
                             ),
                             onPressed: () {
@@ -254,9 +270,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       if (_isLogin)
                         Theme(
-                          data: Theme.of(context).copyWith(
-                            unselectedWidgetColor: Colors.black, 
-                          ),
+                          data: Theme.of(
+                            context,
+                          ).copyWith(unselectedWidgetColor: Colors.black),
                           child: Row(
                             children: [
                               Checkbox(
@@ -264,14 +280,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onChanged: (value) {
                                   setState(() => _rememberMe = value ?? false);
                                 },
-                                activeColor: const Color(0xFFFF5F6D), 
+                                activeColor: const Color(0xFFFF5F6D),
                                 checkColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(4),
                                   side: const BorderSide(color: Colors.black),
                                 ),
                               ),
-                              const Text("Se souvenir de moi")
+                              const Text("Se souvenir de moi"),
                             ],
                           ),
                         ),
@@ -300,12 +316,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 5,
                                 offset: const Offset(0, 3),
-                              )
+                              ),
                             ],
                           ),
                           alignment: Alignment.center,
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
                               : Text(
                                   _isLogin ? 'Se connecter' : 'Créer un compte',
                                   style: const TextStyle(

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:family_manager_app/screens/documents_screen';
+import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserName();
   }
-
+  // Chargement du nom de l'utilisateur depuis Firestore
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -42,8 +42,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // récupération l’utilisateur connecté
     final user = FirebaseAuth.instance.currentUser;
-    final userEmail = user?.email ?? '';
+    if (user == null) {
+      return Scaffold(
+        body: Center(child: Text("Utilisateur non connecté")),
+      );
+    }
+    // Détermination de l'avatar et du nombre de notifications
+    final userEmail = user.email ?? '';
     final isLaura = userEmail == 'machado.laura@live.fr';
     final avatarAsset = isLaura
         ? 'assets/avatar_femme.png'
@@ -54,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: const Color(0xFFF4F6FA),
       body: Column(
         children: [
-          // App Bar arrondie
           Container(
             decoration: const BoxDecoration(
               color: Colors.white,

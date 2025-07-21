@@ -1,20 +1,32 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DocumentsScreen extends StatelessWidget {
   const DocumentsScreen({super.key});
+  
+  // Méthode pour télécharger et ouvrir le PDF
+  Future<void> _downloadAndOpenPdf(String url) async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final filePath = '${dir.path}/document.pdf';
 
-  Future<void> _openDocumentUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      debugPrint('Impossible d\'ouvrir l\'URL : $url');
+      final response = await Dio().download(url, filePath);
+
+      if (response.statusCode == 200) {
+        final result = await OpenFilex.open(filePath);
+        debugPrint('Résultat ouverture fichier : ${result.message}');
+      } else {
+        debugPrint('Échec du téléchargement');
+      }
+    } catch (e) {
+      debugPrint('Erreur ouverture PDF : $e');
     }
   }
-
   Future<void> _sendEmail(String url, String description, String personName) async {
     final subject = Uri.encodeComponent('Document : $description');
     final body = Uri.encodeComponent('Bonjour,\n\nVoici le document lié à $personName :\n$url');
@@ -174,7 +186,7 @@ class DocumentsScreen extends StatelessWidget {
                                         label: const Text('Ouvrir le document'),
                                         onPressed: () {
                                           Navigator.of(ctx).pop();
-                                          _openDocumentUrl(url);
+                                          _downloadAndOpenPdf(url);
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
