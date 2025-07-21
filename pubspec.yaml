@@ -22,7 +22,6 @@ dependencies:
   firebase_messaging: ^15.2.6
   syncfusion_flutter_pdfviewer: ^29.2.7
   path_provider: ^2.1.5
-  url_launcher: ^6.3.1
   intl: ^0.20.2
   mailer: ^6.4.1
   file_picker: ^10.2.0

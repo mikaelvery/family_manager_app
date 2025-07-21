@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -242,6 +243,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Mes rendez-vous',
                         Icons.calendar_today,
                         [Color(0xFFFF5F6D), Color(0xFFFF8E53)],
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const MyAppointmentsScreen()),
+                          );
+                        },
                       ),
                       buildActionButton(
                         'Ajouter document',

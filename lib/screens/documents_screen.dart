@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class DocumentsScreen extends StatelessWidget {
   const DocumentsScreen({super.key});
@@ -27,15 +26,6 @@ class DocumentsScreen extends StatelessWidget {
       debugPrint('Erreur ouverture PDF : $e');
     }
   }
-  Future<void> _sendEmail(String url, String description, String personName) async {
-    final subject = Uri.encodeComponent('Document : $description');
-    final body = Uri.encodeComponent('Bonjour,\n\nVoici le document lié à $personName :\n$url');
-    final mailtoLink = Uri.parse('mailto:?subject=$subject&body=$body');
-
-    if (await canLaunchUrl(mailtoLink)) {
-      await launchUrl(mailtoLink);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,15 +37,8 @@ class DocumentsScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 3),
-              ),
-            ],
           ),
-          padding: const EdgeInsets.only(top: 48, left: 20, right: 20, bottom: 28),
+          padding: const EdgeInsets.only(top: 38, left: 20, right: 20, bottom: 18),
           child: Row(
             children: [
               IconButton(
@@ -194,25 +177,12 @@ class DocumentsScreen extends StatelessWidget {
                                           foregroundColor: Colors.black87,
                                         ),
                                       ),
-                                      ElevatedButton.icon(
-                                        icon: const Icon(Icons.email),
-                                        label: const Text('Envoyer par mail'),
-                                        onPressed: () {
-                                          Navigator.of(ctx).pop();
-                                          _sendEmail(url, description,
-                                              personName);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFFE0E0E0),
-                                          foregroundColor: Colors.black87,
-                                        ),
-                                      ),
+                                      const SizedBox(height: 8),
                                       ElevatedButton.icon(
                                         icon: const Icon(Icons.delete),
                                         label: const Text('Supprimer'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red[400],
+                                          backgroundColor: Color(0xFFFF5F6D),
                                           foregroundColor: Colors.white,
                                         ),
                                         onPressed: () async {
