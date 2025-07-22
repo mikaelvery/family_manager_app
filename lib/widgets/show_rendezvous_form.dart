@@ -35,6 +35,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
     }
   }
 
+  @override
   void dispose() {
     participantController.dispose();
     descriptionController.dispose();
@@ -98,6 +99,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
       }
 
       if (context.mounted) {
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
       }
     }

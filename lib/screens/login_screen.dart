@@ -1,5 +1,4 @@
 import 'package:family_manager_app/screens/home_screen.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -64,7 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final user = userCredential.user;
       if (user != null) {
-        print('Connexion réussie UID : ${user.uid}');
         await _saveCredentials(); 
         if (!mounted) return;
         Navigator.pushReplacement(

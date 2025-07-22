@@ -20,8 +20,10 @@ Future<void> pickAndUploadDocument(BuildContext context) async {
     final fileName = path.basename(file.path);
 
     // Demande à l'utilisateur la description et le prénom
+    // ignore: use_build_context_synchronously
     final data = await _askForDescriptionAndPersonName(context);
     if (data == null || data['description'] == null || data['description']!.isEmpty) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Description obligatoire')),
       );
@@ -51,10 +53,12 @@ Future<void> pickAndUploadDocument(BuildContext context) async {
         'personName': personName,
       });
 
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Document ajouté avec succès !')),
       );
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erreur lors de l\'ajout du document')),
       );

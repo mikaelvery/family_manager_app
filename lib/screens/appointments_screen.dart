@@ -83,7 +83,7 @@ class MyAppointmentsScreen extends StatelessWidget {
               final datetime = (data['datetime'] as Timestamp).toDate();
 
               return AppointmentCard(
-                id: data.id, // <-- ici on passe l'id
+                id: data.id, 
                 participant: participant,
                 description: description,
                 datetime: datetime,
@@ -186,7 +186,7 @@ class AppointmentCard extends StatelessWidget {
     final iconColor = _getColor();
     final icon = _getIcon();
 
-    // Date format: "Mardi 21 juillet" (capitalize 1ère lettre)
+    // Date format
     final formattedDate = _capitalizeSentence(
       DateFormat('EEEE dd MMMM', 'fr_FR').format(datetime),
     );
@@ -236,10 +236,12 @@ class AppointmentCard extends StatelessWidget {
                   .collection('rendezvous')
                   .doc(id)
                   .delete();
+              // ignore: use_build_context_synchronously
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Rendez-vous supprimé')),
               );
             } catch (e) {
+              // ignore: use_build_context_synchronously
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Erreur lors de la suppression: $e')),
               );
@@ -250,6 +252,7 @@ class AppointmentCard extends StatelessWidget {
                 .doc(id)
                 .get();
             if (docSnapshot.exists) {
+              // ignore: use_build_context_synchronously
               showEditRendezVousSheet(context, id, docSnapshot.data()!);
             }
           }

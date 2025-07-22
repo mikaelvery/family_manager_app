@@ -29,6 +29,41 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUserName();
   }
 
+  void deleteExpiredTasks() {
+    final now = DateTime.now();
+
+    FirebaseFirestore.instance.collection('tasks').get().then((snapshot) {
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+
+        // Tâche non faite
+        if (data['done'] == true) continue;
+
+        final dueDateTimestamp = data['dueDate'] as Timestamp?;
+        final reminderTimestamp = data['reminderDateTime'] as Timestamp?;
+
+        final dueDate = dueDateTimestamp?.toDate();
+        final reminderDateTime = reminderTimestamp?.toDate();
+
+        if (reminderDateTime != null) {
+          // Tâche avec rappel : supprimer si la date+heure du rappel est passée
+          if (reminderDateTime.isBefore(now)) {
+            doc.reference.delete();
+          }
+        } else if (dueDate != null) {
+          // Tâche sans rappel : comparer uniquement la date (jour, mois, année)
+          final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+          final todayOnly = DateTime(now.year, now.month, now.day);
+
+          // Supprimer seulement si la dueDate est avant aujourd'hui (jour précédent)
+          if (dueDateOnly.isBefore(todayOnly)) {
+            doc.reference.delete();
+          }
+        }
+      }
+    });
+  }
+
   // Chargement du nom de l'utilisateur depuis Firestore
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -163,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('rendezvous')
+                          .where('datetime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
                           .orderBy('datetime')
                           .snapshots(),
                       builder: (context, snapshot) {
@@ -221,9 +257,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Liste de tâches, rappels',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
+                  const SizedBox(height: 8),
+
+                  // Bouton pour ajouter une tâche
+                  GestureDetector(
+                    onTap: () => showAddTaskSheet(context),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFE4B5), Color(0xFFFFC897)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.add_task, color: Colors.black87),
+                          SizedBox(width: 8),
+                          Text(
+                            'Ajouter une tâche',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 12),
+
+                  // Affichage de la liste des tâches                  
                   taskChecklist(context),
                   const SizedBox(height: 24),
+                  
                   GridView.count(
                     crossAxisCount: 2,
                     childAspectRatio: 1.55,
@@ -272,17 +340,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      buildActionButton(
-                        'Ajouter tâche',
-                        Icons.playlist_add_check,
-                        [Color(0xFFFFE4B5), Color(0xFFFFC897)],
-                        textColor: Colors.black87,
-                        onTap: () => showAddTaskSheet(context),
-                      ),
-                      buildActionButton('Voir mes tâches', Icons.list_alt, [
-                        Color(0xFFFFC371),
-                        Color(0xFFFFA751),
-                      ]),
                       buildActionButton(
                         'Ajouter vacances',
                         Icons.beach_access,

@@ -191,13 +191,17 @@ class DocumentsScreen extends StatelessWidget {
                                               .collection('documents')
                                               .doc(doc.id)
                                               .delete();
+                                            // ignore: use_build_context_synchronously
                                             Navigator.of(ctx).pop();
+                                            // ignore: use_build_context_synchronously
                                             ScaffoldMessenger.of(context)
                                               .showSnackBar(const SnackBar(
                                             content: Text(
                                             'Document supprimé')));
                                           } catch (e) {
+                                            // ignore: use_build_context_synchronously
                                             Navigator.of(ctx).pop();
+                                            // ignore: use_build_context_synchronously
                                             ScaffoldMessenger.of(context)
                                               .showSnackBar(SnackBar(
                                               content: Text(
@@ -214,7 +218,7 @@ class DocumentsScreen extends StatelessWidget {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                   const SizedBox(height: 20),
                 ],
               );
