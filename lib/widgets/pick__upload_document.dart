@@ -110,10 +110,11 @@ Future<Map<String, String>?> _askForDescriptionAndPersonName(BuildContext contex
               final personName = personNameController.text.trim();
 
               if (description.isEmpty) {
-                // Tu peux afficher un message d'erreur ou bloquer la validation
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Description obligatoire')),
+                );
                 return;
               }
-
               Navigator.of(context).pop({
                 'description': description,
                 'personName': personName,

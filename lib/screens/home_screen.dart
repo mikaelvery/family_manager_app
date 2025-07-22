@@ -4,6 +4,7 @@ import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../widgets/appointment_card.dart';
 import '../widgets/task_checklist.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserName();
   }
+
   // Chargement du nom de l'utilisateur depuis Firestore
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -46,9 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // récupération l’utilisateur connecté
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return Scaffold(
-        body: Center(child: Text("Utilisateur non connecté")),
-      );
+      return Scaffold(body: Center(child: Text("Utilisateur non connecté")));
     }
     // Détermination de l'avatar et du nombre de notifications
     final userEmail = user.email ?? '';
@@ -158,27 +158,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 90,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: 100), 
                     child: StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('rendezvous')
                           .orderBy('datetime')
                           .snapshots(),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
                         }
-
                         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                           return const Center(child: Text('Aucun rendez-vous'));
                         }
 
                         final allAppointments = snapshot.data!.docs;
-                        final appointments = showAllAppointments ? allAppointments : allAppointments.take(4).toList();
+                        final appointments = showAllAppointments
+                            ? allAppointments
+                            : allAppointments.take(4).toList();
 
                         return ListView.separated(
                           scrollDirection: Axis.horizontal,
@@ -200,7 +198,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             final String participant = data['participant'] ?? '';
                             final String description = data['description'] ?? '';
                             final DateTime datetime = (data['datetime'] as Timestamp).toDate();
-                            final String formattedDate = DateFormat('dd MMM • HH:mm', 'fr_FR').format(datetime);
+                            final String formattedDate = DateFormat(
+                              'dd MMM • HH:mm',
+                              'fr_FR',
+                            ).format(datetime);
                             final iconData = _getIconForDescription(description);
                             final iconColor = _getColorForDescription(description);
 
@@ -215,7 +216,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 32),
                   const Text(
                     'Liste de tâches, rappels',
@@ -245,7 +245,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         [Color(0xFFFF5F6D), Color(0xFFFF8E53)],
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const MyAppointmentsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const MyAppointmentsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -261,13 +263,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       buildActionButton(
                         'Mes documents',
                         Icons.folder,
-                        [
-                          Color(0xFF00C9A7),
-                          Color(0xFF92FE9D),
-                        ],
+                        [Color(0xFF00C9A7), Color(0xFF92FE9D)],
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const DocumentsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -326,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return Icons.local_hospital;
     }
     if (desc.contains('kiné') || desc.contains('kine')) {
-      return Icons.accessibility_new;
+      return FontAwesomeIcons.personRunning;
     }
     if (desc.contains('ophtalmologue')) return Icons.visibility;
     if (desc.contains('orthophoniste')) return Icons.record_voice_over;
@@ -336,6 +337,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (desc.contains('psychologue')) return Icons.psychology;
     if (desc.contains('chirurgien')) return Icons.health_and_safety;
     if (desc.contains('hopital')) return Icons.medical_services;
+    if (desc.contains('hôpital')) return Icons.medical_services;
+    if (desc.contains('anesthésiste')) return Icons.medical_services;
+    if (desc.contains('neurologue')) return FontAwesomeIcons.brain;
 
     return Icons.event;
   }
@@ -357,7 +361,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (desc.contains('psychologue')) return Colors.amber;
     if (desc.contains('chirurgien')) return Colors.brown;
-    if (desc.contains('hopital')) return Colors.blueGrey;
+    if (desc.contains('hopital')) return Colors.purple;
+    if (desc.contains('hôpital')) return Colors.purple;
+    if (desc.contains('anesthésiste')) return Colors.purple;
+    if (desc.contains('neurologue')) return Colors.cyan;
     return Colors.grey;
   }
 }

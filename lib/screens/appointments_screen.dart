@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:family_manager_app/widgets/show_rendezvous_form.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/intl_standalone.dart'; // si besoin pour localisation sentence case
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MyAppointmentsScreen extends StatelessWidget {
   const MyAppointmentsScreen({super.key});
@@ -20,7 +21,12 @@ class MyAppointmentsScreen extends StatelessWidget {
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
             boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
           ),
-          padding: const EdgeInsets.only(top: 38, left: 20, right: 20, bottom: 18),
+          padding: const EdgeInsets.only(
+            top: 38,
+            left: 20,
+            right: 20,
+            bottom: 18,
+          ),
           child: Row(
             children: [
               IconButton(
@@ -44,7 +50,10 @@ class MyAppointmentsScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('rendezvous')
-            .where('datetime', isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+            .where(
+              'datetime',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()),
+            )
             .orderBy('datetime')
             .snapshots(),
         builder: (context, snapshot) {
@@ -74,6 +83,7 @@ class MyAppointmentsScreen extends StatelessWidget {
               final datetime = (data['datetime'] as Timestamp).toDate();
 
               return AppointmentCard(
+                id: data.id, // <-- ici on passe l'id
                 participant: participant,
                 description: description,
                 datetime: datetime,
@@ -89,12 +99,14 @@ class MyAppointmentsScreen extends StatelessWidget {
 
 /// Widget séparé pour une carte rendez-vous
 class AppointmentCard extends StatelessWidget {
+  final String id;
   final String participant;
   final String description;
   final DateTime datetime;
   final ThemeData theme;
 
   const AppointmentCard({
+    required this.id,
     required this.participant,
     required this.description,
     required this.datetime,
@@ -109,8 +121,8 @@ class AppointmentCard extends StatelessWidget {
     'orthodontiste': Icons.masks,
     'docteur': Icons.local_hospital,
     'médecin': Icons.local_hospital,
-    'kiné': Icons.accessibility_new,
-    'kine': Icons.accessibility_new,
+    'kiné': FontAwesomeIcons.personRunning,
+    'kine': FontAwesomeIcons.personRunning,
     'ophtalmologue': Icons.visibility,
     'orthophoniste': Icons.record_voice_over,
     'ergothérapeute': Icons.psychology,
@@ -120,6 +132,7 @@ class AppointmentCard extends StatelessWidget {
     'hopital': Icons.medical_services,
     'hôpital': Icons.medical_services,
     'anesthésiste': Icons.medical_services,
+    'neurologue': FontAwesomeIcons.brain,
   };
 
   /// Maps descriptions to colors
@@ -140,6 +153,7 @@ class AppointmentCard extends StatelessWidget {
     'hopital': Colors.purple,
     'hôpital': Colors.purple,
     'anesthésiste': Colors.purple,
+    'neurologue': Colors.cyan,
   };
 
   IconData _getIcon() {
@@ -173,7 +187,9 @@ class AppointmentCard extends StatelessWidget {
     final icon = _getIcon();
 
     // Date format: "Mardi 21 juillet" (capitalize 1ère lettre)
-    final formattedDate = _capitalizeSentence(DateFormat('EEEE dd MMMM', 'fr_FR').format(datetime));
+    final formattedDate = _capitalizeSentence(
+      DateFormat('EEEE dd MMMM', 'fr_FR').format(datetime),
+    );
     final formattedTime = DateFormat('HH:mm').format(datetime);
 
     return Material(
@@ -183,10 +199,62 @@ class AppointmentCard extends StatelessWidget {
       shadowColor: Colors.black12,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        splashColor: iconColor.withOpacity(0.2),
-        onTap: () {
-          // TODO: détail rendez-vous
+        splashColor: iconColor.withValues(alpha: 0.2),
+        onTap: () async {
+          final action = await showModalBottomSheet<String>(
+            context: context,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (context) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.edit, color: iconColor),
+                    title: const Text('Modifier le rendez-vous'),
+                    onTap: () => Navigator.pop(context, 'edit'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.delete, color: Colors.red),
+                    title: const Text('Supprimer le rendez-vous'),
+                    onTap: () => Navigator.pop(context, 'delete'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.close),
+                    title: const Text('Annuler'),
+                    onTap: () => Navigator.pop(context, null),
+                  ),
+                ],
+              ),
+            ),
+          );
+
+          if (action == 'delete') {
+            try {
+              await FirebaseFirestore.instance
+                  .collection('rendezvous')
+                  .doc(id)
+                  .delete();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Rendez-vous supprimé')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erreur lors de la suppression: $e')),
+              );
+            }
+          } else if (action == 'edit') {
+            final docSnapshot = await FirebaseFirestore.instance
+                .collection('rendezvous')
+                .doc(id)
+                .get();
+            if (docSnapshot.exists) {
+              showEditRendezVousSheet(context, id, docSnapshot.data()!);
+            }
+          }
         },
+
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Row(
@@ -197,7 +265,7 @@ class AppointmentCard extends StatelessWidget {
                 label: 'Type de rendez-vous: $description',
                 child: Container(
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.15),
+                    color: iconColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   padding: const EdgeInsets.all(14),
@@ -225,9 +293,12 @@ class AppointmentCard extends StatelessWidget {
                         ),
                         Container(
                           margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
-                            color: iconColor.withOpacity(0.2),
+                            color: iconColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
@@ -245,24 +316,32 @@ class AppointmentCard extends StatelessWidget {
                     // Date et heure
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             formattedDate,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.black87.withOpacity(0.7),
+                              color: Colors.black87.withValues(alpha: 0.7),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Icon(Icons.access_time, size: 18, color: Colors.grey),
+                        const Icon(
+                          Icons.access_time,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           formattedTime,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.black87.withOpacity(0.7),
+                            color: Colors.black87.withValues(alpha: 0.7),
                           ),
                         ),
                       ],

@@ -35,6 +35,7 @@ Widget appointmentCard({
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 title,
@@ -49,6 +50,8 @@ Widget appointmentCard({
               const SizedBox(height: 4),
               Text(
                 subtitle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
