@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
+import 'package:family_manager_app/widgets/show_add%20vacation_sheet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -345,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.beach_access,
                         [Color(0xFFB084F5), Color(0xFFB79CF2)],
                         textColor: Colors.black87,
+                        onTap: () => showAddVacationSheet(context),
                       ),
                       buildActionButton(
                         'Voir mes vacances',
