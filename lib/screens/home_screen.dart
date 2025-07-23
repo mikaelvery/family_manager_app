@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
+import 'package:family_manager_app/screens/vacations_screen.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
-import 'package:family_manager_app/widgets/show_add%20vacation_sheet.dart';
+import 'package:family_manager_app/widgets/show_addvacation_sheet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -234,11 +235,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             final data = appointments[index];
                             final String participant = data['participant'] ?? '';
                             final String description = data['description'] ?? '';
-                            final DateTime datetime = (data['datetime'] as Timestamp).toDate();
-                            final String formattedDate = DateFormat(
-                              'dd MMM • HH:mm',
-                              'fr_FR',
-                            ).format(datetime);
+                            final DateTime datetime = (data['datetime'] as Timestamp).toDate().toLocal();
+                            final String formattedDate = DateFormat('dd MMM • HH:mm', 'fr_FR').format(datetime);
                             final iconData = _getIconForDescription(description);
                             final iconColor = _getColorForDescription(description);
 
@@ -346,12 +344,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.beach_access,
                         [Color(0xFFB084F5), Color(0xFFB79CF2)],
                         textColor: Colors.black87,
-                        onTap: () => showAddVacationSheet(context),
+                        onTap: () => showVacationSheet(context),
                       ),
                       buildActionButton(
                         'Voir mes vacances',
                         Icons.flight_takeoff,
                         [Color(0xFF8E2DE2), Color(0xFF4A00E0)],
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const VacationsScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -362,16 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   selectedItemColor: Colors.pinkAccent,
-      //   unselectedItemColor: Colors.grey,
-      //   items: const [
-      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Calendrier'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Documents'),
-      //     BottomNavigationBarItem(icon: Icon(Icons.flight_takeoff), label: 'Vacances'),
-      //   ],
-      // ),
     );
   }
 

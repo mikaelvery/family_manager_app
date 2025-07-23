@@ -105,9 +105,11 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    // On choisit le titre selon si on modifie ou ajoute
+    final bool isEditing = widget.rendezVousId != null;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -120,9 +122,9 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Ajouter un rendez-vous',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              isEditing ? 'Modifier un rendez-vous' : 'Ajouter un rendez-vous',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -160,9 +162,11 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                 elevation: 0,
               ),
               icon: const Icon(Icons.calendar_today),
-              label: const Text(
-                "Choisir une date",
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                selectedDate != null
+                    ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
+                    : "Choisir une date",
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 12),
@@ -181,9 +185,11 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                 elevation: 0,
               ),
               icon: const Icon(Icons.access_time),
-              label: const Text(
-                "Choisir une heure",
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                selectedTime != null
+                    ? selectedTime!.format(context)
+                    : "Choisir une heure",
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 20),
@@ -196,9 +202,9 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                   vertical: 12,
                 ),
               ),
-              child: const Text(
-                'Ajouter',
-                style: TextStyle(
+              child: Text(
+                isEditing ? 'Modifier' : 'Ajouter',
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -209,7 +215,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         ),
       ),
     );
-  } // apell d'un rendez-vous via une feuille modale
+  }
 }
 
 // Fonction pour afficher la feuille modale d'ajout de rendez-vous
