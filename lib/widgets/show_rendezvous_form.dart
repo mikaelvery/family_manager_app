@@ -175,6 +175,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                 labelText: 'Nom de la personne',
                 border: OutlineInputBorder(),
               ),
+              textCapitalization: TextCapitalization.sentences,
               validator: (value) =>
                   value == null || value.isEmpty ? 'Champ requis' : null,
             ),
@@ -185,12 +186,14 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                 labelText: 'Description',
                 border: OutlineInputBorder(),
               ),
+              textCapitalization: TextCapitalization.sentences,
               validator: (value) =>
                   value == null || value.isEmpty ? 'Champ requis' : null,
             ),
             TextFormField(
               controller: medecinController,
               decoration: const InputDecoration(labelText: 'Nom du médecin'),
+              textCapitalization: TextCapitalization.sentences,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Merci d\'indiquer le nom du médecin';

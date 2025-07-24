@@ -90,6 +90,7 @@ Future<Map<String, String>?> _askForDescriptionAndPersonName(BuildContext contex
                 hintText: 'Ex: CNI, Passeport, Mutuelle',
                 border: OutlineInputBorder(),
               ),
+              textCapitalization: TextCapitalization.sentences,
             ),
             const SizedBox(height: 16),
             TextField(
@@ -99,6 +100,7 @@ Future<Map<String, String>?> _askForDescriptionAndPersonName(BuildContext contex
                 hintText: 'Ex: Mika',
                 border: OutlineInputBorder(),
               ),
+              textCapitalization: TextCapitalization.sentences,
             ),
           ],
         ),

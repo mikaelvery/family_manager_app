@@ -329,6 +329,7 @@ void showAddTaskSheet(BuildContext context) {
                     labelText: 'Titre',
                     border: OutlineInputBorder(),
                   ),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton.icon(

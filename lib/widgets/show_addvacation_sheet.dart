@@ -12,7 +12,7 @@ void showVacationSheet(
 }) {
   final formKey = GlobalKey<FormState>();
   final TextEditingController descriptionController =
-      TextEditingController(text: vacationData?['description'] ?? '');
+    TextEditingController(text: vacationData?['description'] ?? '');
   final List<String> personnes = ['Mika', 'Laura', 'Enfants'];
   String selectedNom = vacationData?['nom'] ?? 'Mika';
 
@@ -70,7 +70,8 @@ void showVacationSheet(
               ),
               TextFormField(
                 controller: descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(labelText: 'Description'), 
+                textCapitalization: TextCapitalization.sentences,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Requis' : null,
               ),
