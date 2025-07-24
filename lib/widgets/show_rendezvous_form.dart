@@ -1,3 +1,4 @@
+import 'package:family_manager_app/widgets/auto_complete_medicine.dart';
 import 'package:family_manager_app/widgets/custom_pickers.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -93,13 +94,22 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
           selectedTime!.minute,
         );
 
-        // Récupérer les UIDs des participants
-        final mikaUid = dotenv.env['MIKA_UID']!;
-        final lauraUid = dotenv.env['LAURA_UID']!;
+        // Ajout automatique du nouveau médecin s'il n'existe pas
+        final nomMedecin = medecinController.text.trim();
 
-        final participants = [mikaUid, lauraUid];
+        final medecinsCollection = FirebaseFirestore.instance.collection('medecins');
+        final querySnapshot = await medecinsCollection.where('nom', isEqualTo: nomMedecin).get();
 
-        // Récupérer les tokens FCM pour chaque participant
+        if (querySnapshot.docs.isEmpty && nomMedecin.isNotEmpty) {
+          await medecinsCollection.add({'nom': nomMedecin});
+        }
+
+        // Préparation des participants
+        final mikaUid = dotenv.env['MIKA_UID'] ?? '';
+        final lauraUid = dotenv.env['LAURA_UID'] ?? '';
+        final participants = [mikaUid, lauraUid].where((uid) => uid.isNotEmpty).toList();
+
+        // Récupération des tokens FCM pour les participants
         final tokens = <String>[];
         for (final uid in participants) {
           final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
@@ -113,19 +123,18 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
           'userId': user?.uid,
           'participant': participantController.text.trim(),
           'description': descriptionController.text.trim(),
-          'medecin': medecinController.text.trim(),
+          'medecin': nomMedecin,
           'datetime': Timestamp.fromDate(datetime),
           'participants': participants,
           'tokens': tokens,
-          'createdAt': widget.rendezVousId == null ? Timestamp.now() : null,
           'notificationSent24h': false,
-        }..removeWhere((key, value) => value == null);
+        };
 
+        // Ajout uniquement à la création
         if (widget.rendezVousId == null) {
-          // Création
+          dataToSave['createdAt'] = Timestamp.now();
           await FirebaseFirestore.instance.collection('rendezvous').add(dataToSave);
         } else {
-          // Mise à jour
           await FirebaseFirestore.instance
               .collection('rendezvous')
               .doc(widget.rendezVousId)
@@ -134,6 +143,13 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
 
         if (context.mounted) {
           Navigator.pop(context);
+        }
+      } catch (e) {
+        // Gestion d'erreur si nécessaire, par exemple un SnackBar
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur lors de la sauvegarde: $e')),
+          );
         }
       } finally {
         if (mounted) {
@@ -144,6 +160,8 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
       }
     }
   }
+
+
 
 
 
@@ -190,17 +208,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
               validator: (value) =>
                   value == null || value.isEmpty ? 'Champ requis' : null,
             ),
-            TextFormField(
-              controller: medecinController,
-              decoration: const InputDecoration(labelText: 'Nom du médecin'),
-              textCapitalization: TextCapitalization.sentences,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Merci d\'indiquer le nom du médecin';
-                }
-                return null;
-              },
-            ),
+            AutoCompleteMedecin(controller: medecinController),
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: _pickDate,
