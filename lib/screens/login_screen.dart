@@ -220,6 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icon(Icons.person, color: Colors.black),
                             labelText: 'Prénom',
                           ),
+                          textCapitalization: TextCapitalization.words,
                         ),
 
                       if (!_isLogin) const SizedBox(height: 20),
