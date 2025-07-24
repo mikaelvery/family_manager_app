@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 import 'package:family_manager_app/widgets/custom_pickers.dart';
 
@@ -456,6 +457,21 @@ void showAddTaskSheet(BuildContext context) {
                           selectedTime!.minute,
                         );
                       }
+                      // Récupérer les UIDs des participants
+                      final mikaUid = dotenv.env['MIKA_UID']!;
+                      final lauraUid = dotenv.env['LAURA_UID']!;
+
+                      final participants = [mikaUid, lauraUid];
+                      final tokens = <String>[];
+                      // Récupérer les tokens depuis la collection users pour les participants
+                      for (final uid in participants) {
+                        final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+                        final fcmToken = doc.data()?['fcmToken'];
+                        if (fcmToken != null && !tokens.contains(fcmToken)) {
+                          tokens.add(fcmToken);
+                        }
+                      }
+
                       await FirebaseFirestore.instance.collection('tasks').add({
                         'title': title,
                         'date': selectedDate,
@@ -463,7 +479,10 @@ void showAddTaskSheet(BuildContext context) {
                         'createdAt': FieldValue.serverTimestamp(),
                         'reminder': isReminder,
                         'reminderDateTime': reminderDateTime,
+                        'tokens': tokens,  
+                        'notificationSent24h': false,
                       });
+
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     }

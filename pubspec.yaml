@@ -12,7 +12,6 @@ dependencies:
     sdk: flutter
   cloud_firestore: ^5.6.8
   firebase_core: ^3.13.1
-  flutter_local_notifications: ^19.2.1
   flutter_dotenv: ^5.2.1
   google_fonts: ^6.2.1
   flutter_login: ^5.0.0
@@ -31,6 +30,7 @@ dependencies:
   open_filex: ^4.7.0
   font_awesome_flutter: ^10.8.0
   cupertino_icons: ^1.0.8
+  
   flutter_localizations:
     sdk: flutter
 
@@ -94,4 +94,4 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/login_logo.png"
+  image_path: "assets/laura_mika.png"

@@ -374,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
   IconData _getIconForDescription(String description) {
     final desc = description.toLowerCase();
 
-    if (desc.contains('dentiste')) return Icons.medical_services;
+    if (desc.contains('dentiste')) return FontAwesomeIcons.tooth;
     if (desc.contains('angiologue')) return Icons.healing;
     if (desc.contains('orthodontiste')) return Icons.masks;
     if (desc.contains('docteur') || desc.contains('médecin')) {

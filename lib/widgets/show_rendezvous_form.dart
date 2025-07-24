@@ -2,6 +2,7 @@ import 'package:family_manager_app/widgets/custom_pickers.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ShowRendezVousForm extends StatefulWidget {
   final Map<String, dynamic>? rendezVousData;
@@ -17,8 +18,11 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
   final formKey = GlobalKey<FormState>();
   final TextEditingController participantController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController medecinController = TextEditingController();
+
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  bool _isSubmitting = false; //
 
   @override
   void initState() {
@@ -27,6 +31,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
     if (widget.rendezVousData != null) {
       participantController.text = widget.rendezVousData!['participant'] ?? '';
       descriptionController.text = widget.rendezVousData!['description'] ?? '';
+      medecinController.text = widget.rendezVousData!['medecin'] ?? '';
 
       Timestamp timestamp = widget.rendezVousData!['datetime'];
       DateTime dateTime = timestamp.toDate();
@@ -39,6 +44,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
   void dispose() {
     participantController.dispose();
     descriptionController.dispose();
+    medecinController.dispose();
     super.dispose();
   }
 
@@ -67,43 +73,79 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
   }
 
   Future<void> _submitForm() async {
+    if (_isSubmitting) return;
+
     if (formKey.currentState!.validate() &&
         selectedDate != null &&
         selectedTime != null) {
-      final user = FirebaseAuth.instance.currentUser;
-      final datetime = DateTime(
-        selectedDate!.year,
-        selectedDate!.month,
-        selectedDate!.day,
-        selectedTime!.hour,
-        selectedTime!.minute,
-      );
+      setState(() {
+        _isSubmitting = true;
+      });
 
-      final dataToSave = {
-        'userId': user?.uid,
-        'participant': participantController.text.trim(),
-        'description': descriptionController.text.trim(),
-        'datetime': datetime,
-        'createdAt': widget.rendezVousId == null ? Timestamp.now() : null, // ne pas écraser createdAt si édition
-      }..removeWhere((key, value) => value == null);
+      try {
+        final user = FirebaseAuth.instance.currentUser;
 
-      if (widget.rendezVousId == null) {
-        // Création
-        await FirebaseFirestore.instance.collection('rendezvous').add(dataToSave);
-      } else {
-        // Mise à jour
-        await FirebaseFirestore.instance
-            .collection('rendezvous')
-            .doc(widget.rendezVousId)
-            .update(dataToSave);
-      }
+        final datetime = DateTime(
+          selectedDate!.year,
+          selectedDate!.month,
+          selectedDate!.day,
+          selectedTime!.hour,
+          selectedTime!.minute,
+        );
 
-      if (context.mounted) {
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context);
+        // Récupérer les UIDs des participants
+        final mikaUid = dotenv.env['MIKA_UID']!;
+        final lauraUid = dotenv.env['LAURA_UID']!;
+
+        final participants = [mikaUid, lauraUid];
+
+        // Récupérer les tokens FCM pour chaque participant
+        final tokens = <String>[];
+        for (final uid in participants) {
+          final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+          final fcmToken = doc.data()?['fcmToken'];
+          if (fcmToken != null && !tokens.contains(fcmToken)) {
+            tokens.add(fcmToken);
+          }
+        }
+
+        final dataToSave = {
+          'userId': user?.uid,
+          'participant': participantController.text.trim(),
+          'description': descriptionController.text.trim(),
+          'medecin': medecinController.text.trim(),
+          'datetime': Timestamp.fromDate(datetime),
+          'participants': participants,
+          'tokens': tokens,
+          'createdAt': widget.rendezVousId == null ? Timestamp.now() : null,
+          'notificationSent24h': false,
+        }..removeWhere((key, value) => value == null);
+
+        if (widget.rendezVousId == null) {
+          // Création
+          await FirebaseFirestore.instance.collection('rendezvous').add(dataToSave);
+        } else {
+          // Mise à jour
+          await FirebaseFirestore.instance
+              .collection('rendezvous')
+              .doc(widget.rendezVousId)
+              .update(dataToSave);
+        }
+
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSubmitting = false;
+          });
+        }
       }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +187,16 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
               ),
               validator: (value) =>
                   value == null || value.isEmpty ? 'Champ requis' : null,
+            ),
+            TextFormField(
+              controller: medecinController,
+              decoration: const InputDecoration(labelText: 'Nom du médecin'),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Merci d\'indiquer le nom du médecin';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(

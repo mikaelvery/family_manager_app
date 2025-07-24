@@ -116,7 +116,7 @@ class AppointmentCard extends StatelessWidget {
 
   /// Maps descriptions to icons
   static const Map<String, IconData> _iconMap = {
-    'dentiste': Icons.medical_services,
+    'dentiste': FontAwesomeIcons.tooth,
     'angiologue': Icons.healing,
     'orthodontiste': Icons.masks,
     'docteur': Icons.local_hospital,
