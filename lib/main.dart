@@ -13,9 +13,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // Handler pour la notification en background (obligatoire)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  if (kDebugMode) {
-    print('Handling a background message: ${message.messageId}');
-  }
 }
 
 void main() async {
@@ -51,7 +48,6 @@ void main() async {
   final user = FirebaseAuth.instance.currentUser;
   if (user != null) {
     final token = await messaging.getToken();
-    if (kDebugMode) print("FCM TOKEN: $token");
 
     if (token != null) {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({

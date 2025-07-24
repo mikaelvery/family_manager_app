@@ -32,53 +32,55 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void deleteExpiredTasks() {
-    final now = DateTime.now();
+  final now = DateTime.now();
+  final batch = FirebaseFirestore.instance.batch();
 
-    FirebaseFirestore.instance.collection('tasks').get().then((snapshot) {
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
+  FirebaseFirestore.instance.collection('tasks').get().then((snapshot) {
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
 
-        // Tâche non faite
-        if (data['done'] == true) continue;
+      if (data['done'] == true) continue;
 
-        final dueDateTimestamp = data['dueDate'] as Timestamp?;
-        final reminderTimestamp = data['reminderDateTime'] as Timestamp?;
+      final dueDateTimestamp = data['dueDate'] as Timestamp?;
+      final reminderTimestamp = data['reminderDateTime'] as Timestamp?;
 
-        final dueDate = dueDateTimestamp?.toDate();
-        final reminderDateTime = reminderTimestamp?.toDate();
+      final dueDate = dueDateTimestamp?.toDate();
+      final reminderDateTime = reminderTimestamp?.toDate();
 
-        if (reminderDateTime != null) {
-          // Tâche avec rappel : supprimer si la date+heure du rappel est passée
-          if (reminderDateTime.isBefore(now)) {
-            doc.reference.delete();
-          }
-        } else if (dueDate != null) {
-          // Tâche sans rappel : comparer uniquement la date (jour, mois, année)
-          final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
-          final todayOnly = DateTime(now.year, now.month, now.day);
-
-          // Supprimer seulement si la dueDate est avant aujourd'hui (jour précédent)
-          if (dueDateOnly.isBefore(todayOnly)) {
-            doc.reference.delete();
-          }
+      if (reminderDateTime != null) {
+        if (reminderDateTime.isBefore(now)) {
+          batch.delete(doc.reference);
+        }
+      } else if (dueDate != null) {
+        final dueDateOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+        final todayOnly = DateTime(now.year, now.month, now.day);
+        if (dueDateOnly.isBefore(todayOnly)) {
+          batch.delete(doc.reference);
         }
       }
-    });
-  }
+    }
+    batch.commit();
+  });
+}
+
 
   // Chargement du nom de l'utilisateur depuis Firestore
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      setState(() {
-        _userName = doc['name'] ?? '👤';
-      });
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data() != null) {
+        setState(() {
+          _userName = doc.data()?['name'] ?? '👤';
+        });
+      } else {
+        setState(() {
+          _userName = '👤';
+        });
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +206,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           .orderBy('datetime')
                           .snapshots(),
                       builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Erreur lors du chargement des rendez-vous'));
+                        }
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
                         }
@@ -376,25 +381,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (desc.contains('dentiste')) return FontAwesomeIcons.tooth;
     if (desc.contains('angiologue')) return Icons.healing;
-    if (desc.contains('orthodontiste')) return Icons.masks;
-    if (desc.contains('docteur') || desc.contains('médecin')) {
-      return Icons.local_hospital;
-    }
-    if (desc.contains('kiné') || desc.contains('kine')) {
-      return FontAwesomeIcons.personRunning;
-    }
+    if (desc.contains('orthodontiste')) return FontAwesomeIcons.tooth;
+    if (desc.contains('docteur') || desc.contains('médecin')) return FontAwesomeIcons.userDoctor;
+    if (desc.contains('kiné') || desc.contains('kine') || desc.contains('kinésithérapeute')) return FontAwesomeIcons.personRunning;
     if (desc.contains('ophtalmologue')) return Icons.visibility;
-    if (desc.contains('orthophoniste')) return Icons.record_voice_over;
-    if (desc.contains('ergothérapeute') || desc.contains('ergo')) {
-      return Icons.psychology;
-    }
-    if (desc.contains('psychologue')) return Icons.psychology;
+    if (desc.contains('orthophoniste') || desc.contains('ortho')) return Icons.record_voice_over;
+    if (desc.contains('ergothérapeute') || desc.contains('ergo')) return Icons.psychology;
+    if (desc.contains('psychologue') || desc.contains('psy')) return Icons.psychology;
     if (desc.contains('chirurgien')) return Icons.health_and_safety;
-    if (desc.contains('hopital')) return Icons.medical_services;
-    if (desc.contains('hôpital')) return Icons.medical_services;
+    if (desc.contains('hopital') || desc.contains('hôpital')) return Icons.medical_services;
     if (desc.contains('anesthésiste')) return Icons.medical_services;
     if (desc.contains('neurologue')) return FontAwesomeIcons.brain;
-
+    if (desc.contains('gynécologue') || desc.contains('gynéco')) return Icons.female;
+    if (desc.contains('sage-femme')) return FontAwesomeIcons.baby;
+    if (desc.contains('dermatologue') || desc.contains('dermato')) return Icons.spa;
+    if (desc.contains('cardiologue')) return FontAwesomeIcons.heartPulse;
+    if (desc.contains('urologue')) return FontAwesomeIcons.person;
+    if (desc.contains('orl')) return Icons.hearing;
+    if (desc.contains('rhumatologue')) return FontAwesomeIcons.bone;
+    if (desc.contains('pédiatre')) return FontAwesomeIcons.child;
+    if (desc.contains('gastro-entérologue')) return Icons.local_dining;
+    if (desc.contains('pneumologue')) return FontAwesomeIcons.lungs;
+    if (desc.contains('endocrinologue')) return FontAwesomeIcons.dna;
+    if (desc.contains('infirmier') || desc.contains('infirmière')) return FontAwesomeIcons.syringe;
+    if (desc.contains('ostéopathe') || desc.contains('ostéo')) return Icons.self_improvement;
+    if (desc.contains('podologue')) return FontAwesomeIcons.shoePrints;
+    if (desc.contains('diététicien') || desc.contains('diét')) return Icons.restaurant;
+    if (desc.contains('orthoptiste')) return Icons.remove_red_eye;
+    if (desc.contains('psychomotricien')) return Icons.psychology;
+    if (desc.contains('assistant social')) return Icons.group;
     return Icons.event;
   }
 
@@ -404,21 +419,35 @@ class _HomeScreenState extends State<HomeScreen> {
     if (desc.contains('dentiste')) return Colors.deepPurple;
     if (desc.contains('angiologue')) return Colors.green;
     if (desc.contains('orthodontiste')) return Colors.blue;
-    if (desc.contains('docteur') || desc.contains('médecin')) {
-      return Colors.redAccent;
-    }
-    if (desc.contains('kiné') || desc.contains('kine')) return Colors.orange;
+    if (desc.contains('docteur') || desc.contains('médecin')) return Colors.redAccent;
+    if (desc.contains('kiné') || desc.contains('kine') || desc.contains('kinésithérapeute')) return Colors.orange;
     if (desc.contains('ophtalmologue')) return Colors.indigo;
-    if (desc.contains('orthophoniste')) return Colors.teal;
-    if (desc.contains('ergothérapeute') || desc.contains('ergo')) {
-      return Colors.pink;
-    }
-    if (desc.contains('psychologue')) return Colors.amber;
+    if (desc.contains('orthophoniste') || desc.contains('ortho')) return Colors.teal;
+    if (desc.contains('ergothérapeute') || desc.contains('ergo')) return Colors.pink;
+    if (desc.contains('psychologue') || desc.contains('psy')) return Colors.amber;
     if (desc.contains('chirurgien')) return Colors.brown;
-    if (desc.contains('hopital')) return Colors.purple;
-    if (desc.contains('hôpital')) return Colors.purple;
+    if (desc.contains('hopital') || desc.contains('hôpital')) return Colors.purple;
     if (desc.contains('anesthésiste')) return Colors.purple;
     if (desc.contains('neurologue')) return Colors.cyan;
+    if (desc.contains('gynécologue') || desc.contains('gynéco')) return Colors.pinkAccent;
+    if (desc.contains('sage-femme')) return Colors.lightBlue;
+    if (desc.contains('dermatologue') || desc.contains('dermato')) return Colors.brown;
+    if (desc.contains('cardiologue')) return Colors.red;
+    if (desc.contains('urologue')) return Colors.blueGrey;
+    if (desc.contains('orl')) return Colors.cyan;
+    if (desc.contains('rhumatologue')) return Colors.deepOrange;
+    if (desc.contains('pédiatre')) return Colors.greenAccent;
+    if (desc.contains('gastro-entérologue')) return Colors.indigoAccent;
+    if (desc.contains('pneumologue')) return Colors.teal;
+    if (desc.contains('endocrinologue')) return Colors.deepPurple;
+    if (desc.contains('infirmier') || desc.contains('infirmière')) return Colors.lightGreen;
+    if (desc.contains('ostéopathe') || desc.contains('ostéo')) return Colors.orangeAccent;
+    if (desc.contains('podologue')) return Colors.brown;
+    if (desc.contains('diététicien') || desc.contains('diét')) return Colors.lime;
+    if (desc.contains('orthoptiste')) return Colors.blueGrey;
+    if (desc.contains('psychomotricien')) return Colors.amber;
+    if (desc.contains('assistant social')) return Colors.grey;
     return Colors.grey;
   }
+
 }
