@@ -140,6 +140,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
           'participants': participants,
           'tokens': tokens,
           'notificationSent24h': false,
+          'notificationSent2h' : false
         };
 
         // Ajout uniquement à la création

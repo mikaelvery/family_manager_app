@@ -481,7 +481,7 @@ void showAddTaskSheet(BuildContext context) {
                         'reminder': isReminder,
                         'reminderDateTime': reminderDateTime,
                         'tokens': tokens,  
-                        'notificationSent24h': false,
+                        'notificationSent': false,
                       });
 
                       // ignore: use_build_context_synchronously
