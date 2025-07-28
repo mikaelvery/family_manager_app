@@ -4,84 +4,131 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AutoCompleteMedecin extends StatefulWidget {
   final TextEditingController controller;
 
-  const AutoCompleteMedecin({super.key, required this.controller});
+  const AutoCompleteMedecin({Key? key, required this.controller}) : super(key: key);
 
   @override
-  State<AutoCompleteMedecin> createState() => _AutoCompleteMedecinState();
+  AutoCompleteMedecinState createState() => AutoCompleteMedecinState();
 }
 
-class _AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
-  List<String> options = [];
+class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
+  List<String> suggestions = [];
   bool isLoading = false;
+  OverlayEntry? overlayEntry;
 
-  @override
-  void initState() {
-    super.initState();
-    // détecte les changements de texte
-    widget.controller.addListener(_onTextChanged);
+  final LayerLink layerLink = LayerLink();
+
+  void fetchSuggestions(String input) async {
+    if (input.isEmpty) {
+      setState(() {
+        suggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    // Firestore ne propose pas de "startsWith" directement, on utilise une astuce avec where + orderBy + range
+    final query = FirebaseFirestore.instance
+        .collection('medecins')
+        .orderBy('name')
+        .startAt([input])
+        .endAt([input + '\uf8ff']);
+
+    final snapshot = await query.get();
+
+    final names = snapshot.docs.map((doc) => doc['name'] as String).toList();
+
+    setState(() {
+      suggestions = names;
+      isLoading = false;
+    });
+
+    // Met à jour l'affichage de la liste déroulante
+    showOverlay();
+  }
+
+  void showOverlay() {
+    // Supprime l'overlay précédent si existant
+    overlayEntry?.remove();
+
+    if (suggestions.isEmpty) return;
+
+    final overlay = Overlay.of(context);
+    final renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: size.width,
+        child: CompositedTransformFollower(
+          link: layerLink,
+          showWhenUnlinked: false,
+          offset: Offset(0.0, size.height + 5.0),
+          child: Material(
+            elevation: 4.0,
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              itemCount: suggestions.length,
+              itemBuilder: (context, index) {
+                final suggestion = suggestions[index];
+                return ListTile(
+                  title: Text(suggestion),
+                  onTap: () {
+                    widget.controller.text = suggestion;
+                    widget.controller.selection = TextSelection.fromPosition(
+                      TextPosition(offset: suggestion.length),
+                    );
+                    suggestions = [];
+                    overlayEntry?.remove();
+                    overlayEntry = null;
+                    setState(() {});
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay?.insert(overlayEntry!);
+  }
+
+  void hideOverlay() {
+    overlayEntry?.remove();
+    overlayEntry = null;
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onTextChanged);
+    hideOverlay();
     super.dispose();
-  }
-
-  void _onTextChanged() {
-    final query = widget.controller.text.trim();
-    _searchMedecins(query);
-  }
-
-  Future<void> _searchMedecins(String query) async {
-    if (query.isEmpty) {
-      setState(() => options = []);
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('medecins')
-        .where('name', isGreaterThanOrEqualTo: query)
-        .where('name', isLessThanOrEqualTo: '$query\uf8ff')
-        .limit(10)
-        .get();
-
-    setState(() {
-      options = snapshot.docs.map((doc) => doc['name'] as String).toList();
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete<String>(
-      optionsBuilder: (TextEditingValue textEditingValue) {
-        // On ne fait plus la recherche ici !
-        final input = textEditingValue.text.toLowerCase();
-        return options.where((option) => option.toLowerCase().contains(input));
-      },
-      fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
-        // Remplacer le controller local par le controller passé en paramètre
-        return TextFormField(
-          controller: widget.controller,
-          focusNode: focusNode,
-          decoration: InputDecoration(
-            labelText: 'Nom du médecin',
-            suffixIcon: isLoading ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : null,
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Merci d\'indiquer le nom du médecin';
-            }
-            return null;
-          },
-          onEditingComplete: onEditingComplete,
-        );
-      },
-      onSelected: (selection) {
-        widget.controller.text = selection;
-      },
+    return CompositedTransformTarget(
+      link: layerLink,
+      child: TextFormField(
+        controller: widget.controller,
+        decoration: InputDecoration(
+          labelText: 'Nom du médecin',
+          suffixIcon: isLoading ? CircularProgressIndicator() : null,
+          border: OutlineInputBorder(),
+        ),
+        onChanged: (value) {
+          fetchSuggestions(value.trim());
+        },
+        onEditingComplete: () {
+          hideOverlay();
+          FocusScope.of(context).unfocus();
+        },
+        validator: (value) =>
+            value == null || value.isEmpty ? 'Champ requis' : null,
+      ),
     );
   }
 }

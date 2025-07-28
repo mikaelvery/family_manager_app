@@ -95,24 +95,32 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         );
 
         // Ajout automatique du nouveau médecin s'il n'existe pas
-        final nomMedecin = medecinController.text.trim();
+        final nameMedecin = medecinController.text.trim();
 
         final medecinsCollection = FirebaseFirestore.instance.collection('medecins');
-        final querySnapshot = await medecinsCollection.where('nom', isEqualTo: nomMedecin).get();
+        final querySnapshot = await medecinsCollection
+            .where('name', isEqualTo: nameMedecin)
+            .get();
 
-        if (querySnapshot.docs.isEmpty && nomMedecin.isNotEmpty) {
-          await medecinsCollection.add({'nom': nomMedecin});
+        if (querySnapshot.docs.isEmpty && nameMedecin.isNotEmpty) {
+          await medecinsCollection.add({'name': nameMedecin});
         }
 
         // Préparation des participants
         final mikaUid = dotenv.env['MIKA_UID'] ?? '';
         final lauraUid = dotenv.env['LAURA_UID'] ?? '';
-        final participants = [mikaUid, lauraUid].where((uid) => uid.isNotEmpty).toList();
+        final participants = [
+          mikaUid,
+          lauraUid,
+        ].where((uid) => uid.isNotEmpty).toList();
 
         // Récupération des tokens FCM pour les participants
         final tokens = <String>[];
         for (final uid in participants) {
-          final doc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
           final fcmToken = doc.data()?['fcmToken'];
           if (fcmToken != null && !tokens.contains(fcmToken)) {
             tokens.add(fcmToken);
@@ -123,7 +131,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
           'userId': user?.uid,
           'participant': participantController.text.trim(),
           'description': descriptionController.text.trim(),
-          'medecin': nomMedecin,
+          'medecin': nameMedecin,
           'datetime': Timestamp.fromDate(datetime),
           'participants': participants,
           'tokens': tokens,
@@ -133,7 +141,9 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         // Ajout uniquement à la création
         if (widget.rendezVousId == null) {
           dataToSave['createdAt'] = Timestamp.now();
-          await FirebaseFirestore.instance.collection('rendezvous').add(dataToSave);
+          await FirebaseFirestore.instance
+              .collection('rendezvous')
+              .add(dataToSave);
         } else {
           await FirebaseFirestore.instance
               .collection('rendezvous')
@@ -161,10 +171,6 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
     }
   }
 
-
-
-
-
   @override
   Widget build(BuildContext context) {
     // On choisit le titre selon si on modifie ou ajoute
@@ -177,104 +183,110 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         left: 16,
         right: 16,
       ),
-      child: Form(
-        key: formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isEditing ? 'Modifier un rendez-vous' : 'Ajouter un rendez-vous',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: participantController,
-              decoration: const InputDecoration(
-                labelText: 'Nom de la personne',
-                border: OutlineInputBorder(),
-              ),
-              textCapitalization: TextCapitalization.sentences,
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Champ requis' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
-              ),
-              textCapitalization: TextCapitalization.sentences,
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Champ requis' : null,
-            ),
-            AutoCompleteMedecin(controller: medecinController),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _pickDate,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFE0E6),
-                foregroundColor: const Color(0xFFFF5F6D),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+        child: Form(
+          key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isEditing
+                      ? 'Modifier un rendez-vous'
+                      : 'Ajouter un rendez-vous',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: participantController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de la personne',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Champ requis' : null,
                 ),
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.calendar_today),
-              label: Text(
-                selectedDate != null
-                    ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
-                    : "Choisir une date",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Champ requis' : null,
             ),
             const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _pickTime,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFE0E6),
-                foregroundColor: const Color(0xFFFF5F6D),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                AutoCompleteMedecin(controller: medecinController),
+            const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _pickDate,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFE0E6),
+                    foregroundColor: const Color(0xFFFF5F6D),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    selectedDate != null
+                        ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
+                        : "Choisir une date",
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _pickTime,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFE0E6),
+                    foregroundColor: const Color(0xFFFF5F6D),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.access_time),
+                  label: Text(
+                    selectedTime != null
+                        ? selectedTime!.format(context)
+                        : "Choisir une heure",
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.access_time),
-              label: Text(
-                selectedTime != null
-                    ? selectedTime!.format(context)
-                    : "Choisir une heure",
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submitForm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF5F6D),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 12,
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF5F6D),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: Text(
+                    isEditing ? 'Modifier' : 'Ajouter',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                isEditing ? 'Modifier' : 'Ajouter',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+                const SizedBox(height: 20),
+              ],
         ),
       ),
     );
