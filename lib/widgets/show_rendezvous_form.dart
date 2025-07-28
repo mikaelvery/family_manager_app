@@ -99,12 +99,16 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
 
         final medecinsCollection = FirebaseFirestore.instance.collection('medecins');
         final querySnapshot = await medecinsCollection
-            .where('name', isEqualTo: nameMedecin)
+            .where('nameLower', isEqualTo: nameMedecin.toLowerCase())
             .get();
 
         if (querySnapshot.docs.isEmpty && nameMedecin.isNotEmpty) {
-          await medecinsCollection.add({'name': nameMedecin});
+          await medecinsCollection.add({
+            'name': nameMedecin,
+            'nameLower': nameMedecin.toLowerCase(),
+          });
         }
+
 
         // Préparation des participants
         final mikaUid = dotenv.env['MIKA_UID'] ?? '';
@@ -239,7 +243,7 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
                     selectedDate != null
-                        ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
+                        ? "${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}"
                         : "Choisir une date",
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
@@ -319,3 +323,16 @@ void showEditRendezVousSheet(BuildContext context, String id, Map<String, dynami
     ),
   );
 }
+
+void addMissingNameLower() async {
+  final docs = await FirebaseFirestore.instance.collection('medecins').get();
+  for (final doc in docs.docs) {
+    final data = doc.data();
+    if (!data.containsKey('nameLower') && data['name'] != null) {
+      await doc.reference.update({
+        'nameLower': (data['name'] as String).toLowerCase(),
+      });
+    }
+  }
+}
+

@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AutoCompleteMedecin extends StatefulWidget {
   final TextEditingController controller;
 
-  const AutoCompleteMedecin({Key? key, required this.controller}) : super(key: key);
+  const AutoCompleteMedecin({super.key, required this.controller});
 
   @override
   AutoCompleteMedecinState createState() => AutoCompleteMedecinState();
@@ -18,39 +18,37 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
   final LayerLink layerLink = LayerLink();
 
   void fetchSuggestions(String input) async {
-    if (input.isEmpty) {
-      setState(() {
-        suggestions = [];
-      });
+    final lowerInput = input.toLowerCase();
+
+    if (lowerInput.isEmpty) {
+      hideOverlay();
+      setState(() => suggestions = []);
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
-    // Firestore ne propose pas de "startsWith" directement, on utilise une astuce avec where + orderBy + range
     final query = FirebaseFirestore.instance
         .collection('medecins')
-        .orderBy('name')
-        .startAt([input])
-        .endAt([input + '\uf8ff']);
+        .orderBy('nameLower')
+        .startAt([lowerInput])
+        .endAt([lowerInput + '\uf8ff']);
 
     final snapshot = await query.get();
 
-    final names = snapshot.docs.map((doc) => doc['name'] as String).toList();
+    final names = snapshot.docs
+        .map((doc) => doc['name'] as String)
+        .toList();
 
     setState(() {
       suggestions = names;
       isLoading = false;
     });
 
-    // Met à jour l'affichage de la liste déroulante
     showOverlay();
   }
 
   void showOverlay() {
-    // Supprime l'overlay précédent si existant
     overlayEntry?.remove();
 
     if (suggestions.isEmpty) return;
@@ -64,7 +62,6 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
         width: size.width,
         child: CompositedTransformFollower(
           link: layerLink,
-          showWhenUnlinked: false,
           offset: Offset(0.0, size.height + 5.0),
           child: Material(
             elevation: 4.0,
@@ -82,9 +79,7 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
                       TextPosition(offset: suggestion.length),
                     );
                     suggestions = [];
-                    overlayEntry?.remove();
-                    overlayEntry = null;
-                    setState(() {});
+                    hideOverlay();
                   },
                 );
               },
@@ -94,7 +89,7 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
       ),
     );
 
-    overlay?.insert(overlayEntry!);
+    overlay.insert(overlayEntry!);
   }
 
   void hideOverlay() {
@@ -116,12 +111,17 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
         controller: widget.controller,
         decoration: InputDecoration(
           labelText: 'Nom du médecin',
-          suffixIcon: isLoading ? CircularProgressIndicator() : null,
-          border: OutlineInputBorder(),
+          suffixIcon: isLoading ? const Padding(
+            padding: EdgeInsets.all(10.0),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ) : null,
+          border: const OutlineInputBorder(),
         ),
-        onChanged: (value) {
-          fetchSuggestions(value.trim());
-        },
+        onChanged: (value) => fetchSuggestions(value),
         onEditingComplete: () {
           hideOverlay();
           FocusScope.of(context).unfocus();

@@ -361,7 +361,7 @@ void showAddTaskSheet(BuildContext context) {
                   label: Text(
                     selectedDate == null
                         ? "Choisir une date"
-                        : "Date : ${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}",
+                        : "Date : ${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}",
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
