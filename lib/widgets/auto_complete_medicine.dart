@@ -32,7 +32,7 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
         .collection('medecins')
         .orderBy('nameLower')
         .startAt([lowerInput])
-        .endAt([lowerInput + '\uf8ff']);
+        .endAt(['$lowerInput\uf8ff']);
 
     final snapshot = await query.get();
 

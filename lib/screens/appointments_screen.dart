@@ -13,96 +13,147 @@ class MyAppointmentsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(110),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          padding: const EdgeInsets.only(
-            top: 38,
-            left: 20,
-            right: 20,
-            bottom: 18,
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: 'Retour',
+      body: Column(
+        children: [
+          // HEADER
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF5F6D), Color(0xFFFF8F5F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Mes rendez-vous',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: 0.5,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+            ),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 4,
+              left: 24,
+              right: 24,
+              bottom: 12,
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: -50,
+                  top: -120,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Image.asset(
+                      'assets/images/bg_liquid.png',
+                      width: 145,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                Positioned(
+                  right: -35,
+                  top: -20,
+                  child: Transform.rotate(
+                    angle: 50,
+                    child: Image.asset(
+                      'assets/images/bg_liquid.png',
+                      width: 100,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Retour',
+                    ),
+                    const SizedBox(width: 32),
+                    Text(
+                      'Mes rendez-vous',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontSize: 22, 
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        shadows: const [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black26,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('rendezvous')
-            .where(
-              'datetime',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()),
-            )
-            .orderBy('datetime')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text(
-                'Aucun rendez-vous prévu',
-                style: TextStyle(fontSize: 18, color: Colors.black54),
-              ),
-            );
-          }
+          // LISTE DES RENDEZ-VOUS
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('rendezvous')
+                  .where(
+                    'datetime',
+                    isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()),
+                  )
+                  .orderBy('datetime')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final rendezvous = snapshot.data!.docs;
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Aucun rendez-vous prévu',
+                      style: TextStyle(fontSize: 18, color: Colors.black54),
+                    ),
+                  );
+                }
 
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            itemCount: rendezvous.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final data = rendezvous[index];
-              final participant = data['participant'] ?? '';
-              final description = data['description'] ?? '';
-              final datetime = (data['datetime'] as Timestamp).toDate();
+                final rendezvous = snapshot.data!.docs;
 
-              return AppointmentCard(
-                id: data.id, 
-                participant: participant,
-                description: description,
-                datetime: datetime,
-                theme: theme,
-              );
-            },
-          );
-        },
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
+                  itemCount: rendezvous.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final data = rendezvous[index];
+                    final participant = data['participant'] ?? '';
+                    final description = data['description'] ?? '';
+                    final datetime = (data['datetime'] as Timestamp).toDate();
+                    final medecin = data['medecin'] ?? '';
+
+                    return AppointmentCard(
+                      id: data.id,
+                      participant: participant,
+                      description: description,
+                      datetime: datetime,
+                      medecin: medecin,
+                      theme: theme,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Widget séparé pour une carte rendez-vous
+// Widget séparé pour une carte rendez-vous
 class AppointmentCard extends StatelessWidget {
   final String id;
   final String participant;
   final String description;
   final DateTime datetime;
+  final String medecin;
   final ThemeData theme;
 
   const AppointmentCard({
@@ -110,6 +161,7 @@ class AppointmentCard extends StatelessWidget {
     required this.participant,
     required this.description,
     required this.datetime,
+    required this.medecin,
     required this.theme,
     super.key,
   });
@@ -160,7 +212,6 @@ class AppointmentCard extends StatelessWidget {
     'psychomotricien': Icons.psychology,
     'assistant social': Icons.group,
   };
-
 
   /// Maps descriptions to colors
   static const Map<String, Color> _colorMap = {
@@ -396,6 +447,22 @@ class AppointmentCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           formattedTime,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.black87.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Nom du médecin
+                    Row(
+                      children: [
+                        const Icon(Icons.person, size: 18, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Dr $medecin",
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.black87.withValues(alpha: 0.7),
                           ),

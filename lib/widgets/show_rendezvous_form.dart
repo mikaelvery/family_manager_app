@@ -157,11 +157,13 @@ class _ShowRendezVousFormState extends State<ShowRendezVousForm> {
         }
 
         if (context.mounted) {
+          // ignore: use_build_context_synchronously
           Navigator.pop(context);
         }
       } catch (e) {
         // Gestion d'erreur si nécessaire, par exemple un SnackBar
         if (context.mounted) {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Erreur lors de la sauvegarde: $e')),
           );

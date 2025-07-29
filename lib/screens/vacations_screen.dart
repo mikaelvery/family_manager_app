@@ -44,42 +44,79 @@ class _VacationsScreenState extends State<VacationsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(110),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          padding: const EdgeInsets.only(
-            top: 38,
-            left: 20,
-            right: 20,
-            bottom: 18,
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: 'Retour',
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Mes vacances',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
       body: Column(
         children: [
+          // HEADER dégradé avec images et arrondi comme les autres écrans
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF5F6D), Color(0xFFFF8F5F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+            ),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 4,
+              left: 24,
+              right: 24,
+              bottom: 12,
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: -50,
+                  top: -120,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Image.asset(
+                      'assets/images/bg_liquid.png',
+                      width: 145,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: -35,
+                  top: -20,
+                  child: Transform.rotate(
+                    angle: 50,
+                    child: Image.asset(
+                      'assets/images/bg_liquid.png',
+                      width: 100,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Retour',
+                    ),
+                    const SizedBox(width: 32),
+                    Text(
+                      'Mes vacances',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            shadows: const [
+                              Shadow(
+                                blurRadius: 4,
+                                color: Colors.black26,
+                                offset: Offset(1, 1),
+                              ),
+                            ],
+                          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(

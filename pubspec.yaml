@@ -29,6 +29,7 @@ dependencies:
   dio: ^5.8.0+1
   open_filex: ^4.7.0
   font_awesome_flutter: ^10.8.0
+  badges: ^3.1.2
   cupertino_icons: ^1.0.8
   
   flutter_localizations:
@@ -64,6 +65,7 @@ flutter:
     - assets/avatar_homme.png
     - assets/avatar_femme.png
     - assets/icon.png
+    - assets/images/bg_liquid.png
     - .env
     - .env.local
 
