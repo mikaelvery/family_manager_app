@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
@@ -25,13 +27,45 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String? _userName;
   bool showAllAppointments = false;
+  Timer? _greetingTimer;
 
+  String greetingForNow() {
+    final h = DateTime.now().hour;
+    return (h >= 18 || h < 5) ? 'Bonsoir' : 'Bonjour';
+  }
+   void scheduleGreetingRefresh() {
+    final now = DateTime.now();
+    DateTime next;
+    if (now.hour < 5) {
+      next = DateTime(now.year, now.month, now.day, 5);
+    } else if (now.hour < 18) {
+      next = DateTime(now.year, now.month, now.day, 18);
+    } else {
+      final t = now.add(const Duration(days: 1));
+      next = DateTime(t.year, t.month, t.day, 5);
+    }
+
+    _greetingTimer?.cancel();
+    _greetingTimer = Timer(next.difference(now), () {
+      if (!mounted) return;
+      setState(() {});
+      scheduleGreetingRefresh();
+    });
+  }
+  
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    scheduleGreetingRefresh();
   }
 
+  @override
+  void dispose() {
+    _greetingTimer?.cancel();
+    super.dispose();
+  }
+  
   void deleteExpiredTasks() {
     final now = DateTime.now();
     final batch = FirebaseFirestore.instance.batch();
@@ -101,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'assets/avatar_femme.png'
         : 'assets/avatar_homme.png';
     int notificationCount = 3;
+    final greeting = greetingForNow();
 
     return Scaffold(
       backgroundColor: Color(0xFFFAFAFA),
@@ -156,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Bonjour ${_userName ?? ''} 👋',
+                          '$greeting ${_userName ?? ''} 👋',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
