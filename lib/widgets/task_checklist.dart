@@ -479,11 +479,9 @@ void showAddTaskSheet(BuildContext context) {
                   onPressed: () async {
                     final title = titleController.text.trim();
                     if (title.isNotEmpty) {
-                      DateTime? reminderDateTime;
-                      if (isReminder &&
-                          selectedDate != null &&
-                          selectedTime != null) {
-                        reminderDateTime = DateTime(
+                      DateTime? reminderDateTimeLocal;
+                      if (isReminder && selectedDate != null && selectedTime != null) {
+                        reminderDateTimeLocal = DateTime(
                           selectedDate!.year,
                           selectedDate!.month,
                           selectedDate!.day,
@@ -509,15 +507,18 @@ void showAddTaskSheet(BuildContext context) {
                         }
                       }
 
+                      final reminderDateTimeUtc = reminderDateTimeLocal?.toUtc();
                       await FirebaseFirestore.instance.collection('tasks').add({
                         'title': title,
                         'date': selectedDate,
                         'done': false,
                         'createdAt': FieldValue.serverTimestamp(),
                         'reminder': isReminder,
-                        'reminderDateTime': reminderDateTime,
+                        'reminderDateTime': reminderDateTimeUtc != null
+                            ? Timestamp.fromDate(reminderDateTimeUtc)
+                            : null,
                         'tokens': tokens,
-                        'notificationSent': false,
+                        'reminderSent': false,
                       });
 
                       // ignore: use_build_context_synchronously
