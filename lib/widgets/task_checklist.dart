@@ -159,19 +159,19 @@ Widget taskChecklist(BuildContext context) {
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
                                   style: TextButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.redAccent,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 10,
-                                    ),
+                                    backgroundColor: Colors.blueAccent,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
                                   ),
                                   child: const Text(
                                     'Fermer',
-                                    style: TextStyle(fontSize: 16),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -189,14 +189,40 @@ Widget taskChecklist(BuildContext context) {
                           showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
-                              title: const Text('Confirmer la suppression'),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              backgroundColor: Colors.white,
+                              title: const Text(
+                                'Confirmer la suppression',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Colors.black87,
+                                ),
+                              ),
                               content: const Text(
                                 'Souhaitez-vous vraiment supprimer cette tâche ?',
+                                style: TextStyle(fontSize: 16),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('Annuler'),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.grey.shade300,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
+                                  ),
+                                  child: const Text(
+                                    'Annuler',
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () {
@@ -206,9 +232,20 @@ Widget taskChecklist(BuildContext context) {
                                         .delete();
                                     Navigator.pop(context);
                                   },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
+                                  ),
                                   child: const Text(
                                     'Supprimer',
-                                    style: TextStyle(color: Colors.redAccent),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -356,7 +393,7 @@ void showAddTaskSheet(BuildContext context) {
             );
             if (picked != null) {
               setModal(() => selectedDate = picked);
-              // si on a l’heure mais pas la date, on garde l’heure ; sinon rien à faire
+              // si on a l’heure mais pas la date, on garde l’heure 
             }
           }
 

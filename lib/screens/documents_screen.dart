@@ -148,7 +148,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     final dateFmt = DateFormat('dd MMM yyyy', 'fr_FR');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Color(0xFFFAFAFA),
       body: Column(
         children: [
           // HEADER dégradé avec search bar

@@ -42,27 +42,28 @@ class HomeAddTaskButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             child: Row(
               mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
-              mainAxisAlignment:
-                  fullWidth ? MainAxisAlignment.center : MainAxisAlignment.start,
+              mainAxisAlignment: fullWidth
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 Container(
-                  width: 24,  // un peu plus petit
+                  width: 24,
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.45),
+                      color: Colors.white.withValues(alpha: 0.45),
                     ),
                   ),
                   alignment: Alignment.center,
                   child: const Icon(
                     Icons.add_rounded,
-                    size: 16,  // plus petit
+                    size: 16, 
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 8), // un peu moins d’espace
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     label,
@@ -71,17 +72,10 @@ class HomeAddTaskButton extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,  // police réduite
+                      fontSize: 14, 
                     ),
                   ),
                 ),
-                // Suppression de l'icône flèche
-                // const SizedBox(width: 8),
-                // const Icon(
-                //   Icons.arrow_forward_rounded,
-                //   size: 18,
-                //   color: Colors.white,
-                // ),
               ],
             ),
           ),

@@ -249,7 +249,7 @@ class _VacationsScreenState extends State<VacationsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Color(0xFFFAFAFA),
       body: Column(
         children: [
           // HEADER dégradé — trigger de filtres 

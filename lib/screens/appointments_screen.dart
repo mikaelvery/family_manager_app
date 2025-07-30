@@ -12,7 +12,7 @@ class MyAppointmentsScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Color(0xFFFAFAFA),
       body: Column(
         children: [
           // ======== HEADER ========

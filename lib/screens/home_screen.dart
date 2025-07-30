@@ -103,13 +103,12 @@ class _HomeScreenState extends State<HomeScreen> {
     int notificationCount = 3;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Color(0xFFFAFAFA),
       body: Column(
         children: [
           // HEADER
           Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFFFF5F6D), Color(0xFFFF8F5F)],
                 begin: Alignment.topLeft,
@@ -330,9 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  HomeAddTaskButton(
-                    onTap: () => showAddTaskSheet(context),
-                  ),
+                  HomeAddTaskButton(onTap: () => showAddTaskSheet(context)),
                   const SizedBox(height: 12),
                   taskChecklist(context),
                   const SizedBox(height: 24),

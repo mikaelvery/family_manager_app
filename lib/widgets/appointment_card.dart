@@ -19,7 +19,7 @@ Widget appointmentCard({
         BoxShadow(
           color: Colors.grey.withAlpha(25),
           blurRadius: 8,
-          offset: const Offset(0, 4),
+          offset: const Offset(0, 6),
         ),
       ],
     ),
