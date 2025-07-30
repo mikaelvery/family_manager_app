@@ -68,6 +68,17 @@ Color getColorForDescription(String description) {
   if (desc.contains('dentiste')) return Colors.deepPurple;
   if (desc.contains('angiologue')) return Colors.green;
   if (desc.contains('orthodontiste')) return Colors.blue;
+
+  if (desc.contains('docteur') || desc.contains('médecin')) {
+    return Colors.redAccent;
+  }
+
+  if (desc.contains('kiné') ||
+      desc.contains('kine') ||
+      desc.contains('kinésithérapeute')) {
+    return Colors.orange;
+  }
+
   if (desc.contains('ophtalmologue')) return Colors.indigo;
   if (desc.contains('orthophoniste') || desc.contains('ortho')) {
     return Colors.teal;
