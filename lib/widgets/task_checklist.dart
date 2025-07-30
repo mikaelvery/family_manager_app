@@ -7,9 +7,9 @@ import 'package:family_manager_app/widgets/custom_pickers.dart';
 Widget taskChecklist(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
     stream: FirebaseFirestore.instance
-      .collection('tasks')
-      .orderBy('createdAt', descending: true)
-      .snapshots(),
+        .collection('tasks')
+        .orderBy('createdAt', descending: true)
+        .snapshots(),
     builder: (context, snapshot) {
       if (!snapshot.hasData) {
         return const Center(child: CircularProgressIndicator());
@@ -120,8 +120,8 @@ Widget taskChecklist(BuildContext context) {
                             fontWeight: FontWeight.w600,
                             color: done ? Colors.grey.shade500 : Colors.black87,
                             decoration: done
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
                           ),
                         ),
                       ),
@@ -261,25 +261,25 @@ Widget taskChecklist(BuildContext context) {
                               ],
                             ),
                           if (formattedTime != null)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16),
-                            child: Text(
-                              formattedTime,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.redAccent,
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16),
+                              child: Text(
+                                formattedTime,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.redAccent,
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),
                   if (index < filteredTasks.length - 1)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 20),
-                    child: Divider(color: Colors.black12, thickness: 1),
-                  ),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Divider(color: Colors.black12, thickness: 1),
+                    ),
                 ],
               ),
             );
@@ -307,245 +307,376 @@ Widget customCheckbox(bool value, void Function(bool?) onChanged) {
         ),
         borderRadius: BorderRadius.circular(8),
         boxShadow: value
-        ? [
-            BoxShadow(
-              color: const Color(0xFFFF5F6D).withValues(alpha: 0.6),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ]
-        : [],
+            ? [
+                BoxShadow(
+                  color: const Color(0xFFFF5F6D).withValues(alpha: 0.6),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : [],
       ),
       child: value
-      ? const Icon(Icons.check, size: 16, color: Colors.white)
-      : null,
+          ? const Icon(Icons.check, size: 16, color: Colors.white)
+          : null,
     ),
   );
 }
 
 // Fonction pour afficher la feuille modale d'ajout de tâche
 void showAddTaskSheet(BuildContext context) {
-  final TextEditingController titleController = TextEditingController();
+  final pageCtx = context; // Contexte parent pour SnackBars après pop
+
+  final formKey = GlobalKey<FormState>();
+  final titleController = TextEditingController();
+
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   bool isReminder = false;
+  bool saving = false;
+
+  const accent = Color(0xFFFF5F6D);
 
   showModalBottomSheet(
-    context: context,
+    context: pageCtx,
     isScrollControlled: true,
+    showDragHandle: true,
+    backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (context) {
+    builder: (sheetCtx) {
       return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-              top: 24,
-              left: 16,
-              right: 16,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Ajouter une tâche',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Titre',
-                    border: OutlineInputBorder(),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final DateTime? picked =
-                        await CustomPickers.showCustomDatePicker(
-                          context,
-                          initialDate: DateTime.now(),
-                        );
-                    if (picked != null) {
-                      setState(() {
-                        selectedDate = picked;
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFE0E6),
-                    foregroundColor: const Color(0xFFFF5F6D),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 1,
-                      vertical: 12,
+        builder: (ctx, setModal) {
+          Future<void> pickDate() async {
+            final picked = await CustomPickers.showCustomDatePicker(
+              sheetCtx,
+              initialDate: selectedDate ?? DateTime.now(),
+              accent: accent,
+            );
+            if (picked != null) {
+              setModal(() => selectedDate = picked);
+              // si on a l’heure mais pas la date, on garde l’heure ; sinon rien à faire
+            }
+          }
+
+          Future<void> pickTime() async {
+            final picked = await CustomPickers.showCustomTimePicker(
+              sheetCtx,
+              initialTime: selectedTime ?? TimeOfDay.now(),
+              accent: accent,
+            );
+            if (picked != null) setModal(() => selectedTime = picked);
+          }
+
+          Future<void> save() async {
+            if (saving) return;
+
+            if (!formKey.currentState!.validate()) return;
+
+            if (isReminder) {
+              // Rappel = nécessite date + heure
+              if (selectedDate == null || selectedTime == null) {
+                ScaffoldMessenger.of(sheetCtx).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Choisis une date et une heure pour le rappel',
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
                   ),
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(
-                    selectedDate == null
-                        ? "Choisir une date"
-                        : "Date : ${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}",
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          isReminder = !isReminder;
-                          if (isReminder &&
-                              selectedDate != null &&
-                              selectedTime != null) {
-                            selectedTime = null;
-                          }
-                        });
-                      },
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: isReminder
-                              ? const Color(0xFFFF5F6D)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isReminder
-                                ? const Color(0xFFFF5F6D)
-                                : Colors.black26,
-                            width: isReminder ? 2 : 1,
+                );
+                return;
+              }
+            }
+
+            setModal(() => saving = true);
+            try {
+              final title = titleController.text.trim();
+
+              DateTime? reminderLocal;
+              if (isReminder && selectedDate != null && selectedTime != null) {
+                reminderLocal = DateTime(
+                  selectedDate!.year,
+                  selectedDate!.month,
+                  selectedDate!.day,
+                  selectedTime!.hour,
+                  selectedTime!.minute,
+                );
+              }
+
+              // Participants via .env
+              final mikaUid = dotenv.env['MIKA_UID'] ?? '';
+              final lauraUid = dotenv.env['LAURA_UID'] ?? '';
+              final participants = [
+                mikaUid,
+                lauraUid,
+              ].where((e) => e.isNotEmpty).toList();
+
+              // Tokens FCM
+              final tokens = <String>[];
+              for (final uid in participants) {
+                final doc = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(uid)
+                    .get();
+                final fcm = doc.data()?['fcmToken'];
+                if (fcm != null && !tokens.contains(fcm)) tokens.add(fcm);
+              }
+
+              await FirebaseFirestore.instance.collection('tasks').add({
+                'title': title,
+                'date': selectedDate != null
+                    ? Timestamp.fromDate(selectedDate!)
+                    : null,
+                'done': false,
+                'createdAt': FieldValue.serverTimestamp(),
+                'reminder': isReminder,
+                'reminderDateTime': reminderLocal != null
+                    ? Timestamp.fromDate(reminderLocal.toUtc())
+                    : null,
+                'tokens': tokens,
+                'reminderSent': false,
+              });
+
+              if (pageCtx.mounted) {
+                Navigator.of(sheetCtx).pop(); // ferme la sheet
+                ScaffoldMessenger.of(pageCtx).showSnackBar(
+                  const SnackBar(content: Text('Tâche enregistrée')),
+                );
+              }
+            } catch (e) {
+              if (pageCtx.mounted) {
+                ScaffoldMessenger.of(
+                  pageCtx,
+                ).showSnackBar(SnackBar(content: Text('Erreur : $e')));
+              }
+            } finally {
+              if (pageCtx.mounted) setModal(() => saving = false);
+            }
+          }
+
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(sheetCtx).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header compact
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
+                            color: accent.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.checklist, color: accent),
+                        ),
+                        title: const Text(
+                          'Ajouter une tâche / rappel',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
                           ),
                         ),
-                        child: isReminder
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 18,
-                              )
+                        subtitle: const Text(
+                          'Décris la tâche et, si besoin, planifie un rappel',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Titre (obligatoire)
+                      TextFormField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Titre',
+                          prefixIcon: Icon(Icons.title_rounded),
+                          filled: true,
+                          fillColor: Color(0xFFF9FAFB),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFE5E7EB)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: Color(0xFFCBD5E1)),
+                          ),
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Titre requis'
                             : null,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text('Ceci est un rappel'),
-                  ],
-                ),
-                if (isReminder) ...[
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      final TimeOfDay? pickedTime =
-                          await CustomPickers.showCustomTimePicker(
-                            context,
-                            initialTime: selectedTime ?? TimeOfDay.now(),
-                          );
-                      if (pickedTime != null) {
-                        setState(() {
-                          selectedTime = pickedTime;
-                        });
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFE0E6),
-                      foregroundColor: const Color(0xFFFF5F6D),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                      const SizedBox(height: 12),
+
+                      // Date (facultative) — utile même sans rappel
+                      _TaskPillButton(
+                        icon: Icons.calendar_today,
+                        label: selectedDate != null
+                            ? 'Date : ${selectedDate!.day.toString().padLeft(2, '0')}/${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.year}'
+                            : 'Choisir une date',
+                        accent: accent,
+                        onTap: pickDate,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 8),
+
+                      // Switch "Ceci est un rappel"
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.notifications_active_outlined,
+                              color: accent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                'Ceci est un rappel',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: isReminder,
+                              activeColor: accent,
+                              onChanged: (val) {
+                                setModal(() {
+                                  isReminder = val;
+                                  // On ne force pas la remise à zéro des dates/heures
+                                  // mais on exigera date+heure à la sauvegarde.
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      elevation: 0,
-                    ),
-                    icon: const Icon(Icons.access_time),
-                    label: Text(
-                      selectedTime == null
-                          ? "Choisir une heure"
-                          : "Heure : ${selectedTime!.format(context)}",
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    final title = titleController.text.trim();
-                    if (title.isNotEmpty) {
-                      DateTime? reminderDateTimeLocal;
-                      if (isReminder && selectedDate != null && selectedTime != null) {
-                        reminderDateTimeLocal = DateTime(
-                          selectedDate!.year,
-                          selectedDate!.month,
-                          selectedDate!.day,
-                          selectedTime!.hour,
-                          selectedTime!.minute,
-                        );
-                      }
-                      // Récupérer les UIDs des participants
-                      final mikaUid = dotenv.env['MIKA_UID']!;
-                      final lauraUid = dotenv.env['LAURA_UID']!;
 
-                      final participants = [mikaUid, lauraUid];
-                      final tokens = <String>[];
-                      // Récupérer les tokens depuis la collection users pour les participants
-                      for (final uid in participants) {
-                        final doc = await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(uid)
-                            .get();
-                        final fcmToken = doc.data()?['fcmToken'];
-                        if (fcmToken != null && !tokens.contains(fcmToken)) {
-                          tokens.add(fcmToken);
-                        }
-                      }
+                      if (isReminder) ...[
+                        const SizedBox(height: 8),
+                        _TaskPillButton(
+                          icon: Icons.access_time,
+                          label: selectedTime != null
+                              ? 'Heure : ${selectedTime!.format(sheetCtx)}'
+                              : 'Choisir une heure',
+                          accent: accent,
+                          onTap: pickTime,
+                        ),
+                      ],
 
-                      final reminderDateTimeUtc = reminderDateTimeLocal?.toUtc();
-                      await FirebaseFirestore.instance.collection('tasks').add({
-                        'title': title,
-                        'date': selectedDate,
-                        'done': false,
-                        'createdAt': FieldValue.serverTimestamp(),
-                        'reminder': isReminder,
-                        'reminderDateTime': reminderDateTimeUtc != null
-                            ? Timestamp.fromDate(reminderDateTimeUtc)
-                            : null,
-                        'tokens': tokens,
-                        'reminderSent': false,
-                      });
+                      const SizedBox(height: 16),
 
-                      // ignore: use_build_context_synchronously
-                      Navigator.pop(context);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF5F6D),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 12,
-                    ),
-                  ),
-                  child: const Text(
-                    'Enregistrer',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                      // Actions
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: saving
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.check),
+                          label: const Text('Enregistrer'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0EA5E9),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: saving ? null : save,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           );
         },
       );
     },
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               UI helper pill                               */
+/* -------------------------------------------------------------------------- */
+
+class _TaskPillButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _TaskPillButton({
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      // ignore: deprecated_member_use
+      color: accent.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: accent.withValues(alpha: 0.35)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: accent, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.w700, color: accent),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
