@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '💖 L&amp;M Family 💖',
+      title: '💖 L&amp;M 💖',
       debugShowCheckedModeBanner: false,
       locale: const Locale('fr'),
       supportedLocales: const [
