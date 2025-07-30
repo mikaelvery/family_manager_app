@@ -110,7 +110,7 @@ class AutoCompleteMedecinState extends State<AutoCompleteMedecin> {
       child: TextFormField(
         controller: widget.controller,
         decoration: InputDecoration(
-          labelText: 'Nom du médecin',
+          labelText: 'Nom Prénom du médecin',
           suffixIcon: isLoading ? const Padding(
             padding: EdgeInsets.all(10.0),
             child: SizedBox(

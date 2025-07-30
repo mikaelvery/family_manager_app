@@ -12,10 +12,10 @@ class MyAppointmentsScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: const Color(0xFFF6F7FB),
       body: Column(
         children: [
-          // HEADER
+          // ======== HEADER ========
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -68,7 +68,7 @@ class MyAppointmentsScreen extends StatelessWidget {
                     Text(
                       'Mes rendez-vous',
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        fontSize: 22, 
+                        fontSize: 22,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
@@ -87,7 +87,7 @@ class MyAppointmentsScreen extends StatelessWidget {
             ),
           ),
 
-          // LISTE DES RENDEZ-VOUS
+          // ======== LISTE ========
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -100,41 +100,33 @@ class MyAppointmentsScreen extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const _LoadingState();
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Aucun rendez-vous prévu',
-                      style: TextStyle(fontSize: 18, color: Colors.black54),
-                    ),
-                  );
+                  return const _EmptyState(message: 'Aucun rendez-vous prévu');
                 }
 
-                final rendezvous = snapshot.data!.docs;
+                final items = snapshot.data!.docs;
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 20,
-                  ),
-                  itemCount: rendezvous.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final data = rendezvous[index];
-                    final participant = data['participant'] ?? '';
-                    final description = data['description'] ?? '';
-                    final datetime = (data['datetime'] as Timestamp).toDate();
-                    final medecin = data['medecin'] ?? '';
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final doc = items[i];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final participant = (data['participant'] ?? '').toString();
+                    final description = (data['description'] ?? '').toString();
+                    final medecin = (data['medecin'] ?? '').toString();
+                    final dt = (data['datetime'] as Timestamp).toDate();
 
                     return AppointmentCard(
-                      id: data.id,
+                      id: doc.id,
                       participant: participant,
                       description: description,
-                      datetime: datetime,
+                      datetime: dt,
                       medecin: medecin,
-                      theme: theme,
                     );
                   },
                 );
@@ -147,137 +139,57 @@ class MyAppointmentsScreen extends StatelessWidget {
   }
 }
 
-// Widget séparé pour une carte rendez-vous
+/* ===================== Carte Rendez-vous ===================== */
+
 class AppointmentCard extends StatelessWidget {
   final String id;
   final String participant;
   final String description;
   final DateTime datetime;
   final String medecin;
-  final ThemeData theme;
 
   const AppointmentCard({
+    super.key,
     required this.id,
     required this.participant,
     required this.description,
     required this.datetime,
     required this.medecin,
-    required this.theme,
-    super.key,
   });
 
-  /// Maps descriptions to icons
-  static const Map<String, IconData> _iconMap = {
-    'dentiste': FontAwesomeIcons.tooth,
-    'angiologue': Icons.healing,
-    'orthodontiste': FontAwesomeIcons.tooth,
-    'docteur': FontAwesomeIcons.userDoctor,
-    'médecin': FontAwesomeIcons.userDoctor,
-    'kiné': FontAwesomeIcons.personRunning,
-    'kine': FontAwesomeIcons.personRunning,
-    'kinésithérapeute': FontAwesomeIcons.personRunning,
-    'ophtalmologue': Icons.visibility,
-    'orthophoniste': Icons.record_voice_over,
-    'ortho': Icons.record_voice_over,
-    'ergothérapeute': Icons.psychology,
-    'ergo': Icons.psychology,
-    'psychologue': Icons.psychology,
-    'psy': Icons.psychology,
-    'chirurgien': Icons.health_and_safety,
-    'hopital': Icons.medical_services,
-    'hôpital': Icons.medical_services,
-    'anesthésiste': Icons.medical_services,
-    'neurologue': FontAwesomeIcons.brain,
-    'gynécologue': Icons.female,
-    'gynéco': Icons.female,
-    'sage-femme': FontAwesomeIcons.baby,
-    'dermatologue': Icons.spa,
-    'dermato': Icons.spa,
-    'cardiologue': FontAwesomeIcons.heartPulse,
-    'urologue': FontAwesomeIcons.person,
-    'orl': Icons.hearing,
-    'rhumatologue': FontAwesomeIcons.bone,
-    'pédiatre': FontAwesomeIcons.child,
-    'gastro-entérologue': Icons.local_dining,
-    'pneumologue': FontAwesomeIcons.lungs,
-    'endocrinologue': FontAwesomeIcons.dna,
-    'infirmier': FontAwesomeIcons.syringe,
-    'infirmière': FontAwesomeIcons.syringe,
-    'ostéopathe': Icons.self_improvement,
-    'ostéo': Icons.self_improvement,
-    'podologue': FontAwesomeIcons.shoePrints,
-    'diététicien': Icons.restaurant,
-    'diét': Icons.restaurant,
-    'orthoptiste': Icons.remove_red_eye,
-    'psychomotricien': Icons.psychology,
-    'assistant social': Icons.group,
-  };
-
-  /// Maps descriptions to colors
-  static const Map<String, Color> _colorMap = {
-    'dentiste': Colors.deepPurple,
-    'angiologue': Colors.green,
-    'orthodontiste': Colors.blue,
-    'docteur': Colors.redAccent,
-    'médecin': Colors.redAccent,
-    'kiné': Colors.orange,
-    'kine': Colors.orange,
-    'kinésithérapeute': Colors.orange,
-    'ophtalmologue': Colors.indigo,
-    'orthophoniste': Colors.teal,
-    'ortho': Colors.teal,
-    'ergothérapeute': Colors.pink,
-    'ergo': Colors.pink,
-    'psychologue': Colors.amber,
-    'psy': Colors.amber,
-    'chirurgien': Colors.brown,
-    'hopital': Colors.purple,
-    'hôpital': Colors.purple,
-    'anesthésiste': Colors.purple,
-    'neurologue': Colors.cyan,
-    'gynécologue': Colors.pinkAccent,
-    'gynéco': Colors.pinkAccent,
-    'sage-femme': Colors.lightBlue,
-    'dermatologue': Colors.brown,
-    'dermato': Colors.brown,
-    'cardiologue': Colors.red,
-    'urologue': Colors.blueGrey,
-    'orl': Colors.cyan,
-    'rhumatologue': Colors.deepOrange,
-    'pédiatre': Colors.greenAccent,
-    'gastro-entérologue': Colors.indigoAccent,
-    'pneumologue': Colors.teal,
-    'endocrinologue': Colors.deepPurple,
-    'infirmier': Colors.lightGreen,
-    'infirmière': Colors.lightGreen,
-    'ostéopathe': Colors.orangeAccent,
-    'ostéo': Colors.orangeAccent,
-    'podologue': Colors.brown,
-    'diététicien': Colors.lime,
-    'diét': Colors.lime,
-    'orthoptiste': Colors.blueGrey,
-    'psychomotricien': Colors.amber,
-    'assistant social': Colors.grey,
-  };
-
-  IconData _getIcon() {
-    final desc = description.toLowerCase();
-    for (final key in _iconMap.keys) {
-      if (desc.contains(key)) {
-        return _iconMap[key]!;
-      }
+  Color _tintFor(String desc) {
+    final d = desc.toLowerCase();
+    if (d.contains('dent')) return const Color(0xFFEF4444); 
+    if (d.contains('opht') || d.contains('orthopt')) {
+      return const Color(0xFF0EA5E9); 
     }
-    return Icons.event;
+    if (d.contains('kin')) return const Color(0xFFF59E0B); 
+    if (d.contains('psy')) return const Color(0xFF8B5CF6); 
+    if (d.contains('derm')) return const Color(0xFF10B981); 
+    if (d.contains('cardio')) return const Color(0xFFDC2626); 
+    if (d.contains('orl')) return const Color(0xFF06B6D4); 
+    if (d.contains('gyn')) return const Color(0xFFF472B6);
+    if (d.contains('pédi') || d.contains('pedi')) {
+      return const Color(0xFF22C55E);
+    }
+    return const Color(0xFF4F46E5);
   }
 
-  Color _getColor() {
-    final desc = description.toLowerCase();
-    for (final key in _colorMap.keys) {
-      if (desc.contains(key)) {
-        return _colorMap[key]!;
-      }
+  IconData _iconFor(String desc) {
+    final d = desc.toLowerCase();
+    if (d.contains('dent') || d.contains('orthod')) {
+      return FontAwesomeIcons.tooth;
     }
-    return Colors.grey;
+    if (d.contains('opht') || d.contains('orthopt')) return Icons.visibility;
+    if (d.contains('kin')) return FontAwesomeIcons.personRunning;
+    if (d.contains('psy')) return Icons.psychology;
+    if (d.contains('derm')) return Icons.spa;
+    if (d.contains('cardio')) return FontAwesomeIcons.heartPulse;
+    if (d.contains('orl')) return Icons.hearing;
+    if (d.contains('gyn')) return Icons.female;
+    if (d.contains('sage-femme')) return FontAwesomeIcons.baby;
+    if (d.contains('neuro')) return FontAwesomeIcons.brain;
+    return Icons.event; // fallback
   }
 
   String _capitalizeSentence(String text) {
@@ -287,193 +199,371 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = _getColor();
-    final icon = _getIcon();
+    final accent = _tintFor(description);
+    final icon = _iconFor(description);
 
-    // Date format
     final formattedDate = _capitalizeSentence(
       DateFormat('EEEE dd MMMM', 'fr_FR').format(datetime),
     );
     final formattedTime = DateFormat('HH:mm').format(datetime);
 
     return Material(
-      elevation: 4,
-      borderRadius: BorderRadius.circular(16),
       color: Colors.white,
-      shadowColor: Colors.black12,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        splashColor: iconColor.withValues(alpha: 0.2),
-        onTap: () async {
-          final action = await showModalBottomSheet<String>(
-            context: context,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (context) => SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.edit, color: iconColor),
-                    title: const Text('Modifier le rendez-vous'),
-                    onTap: () => Navigator.pop(context, 'edit'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Supprimer le rendez-vous'),
-                    onTap: () => Navigator.pop(context, 'delete'),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.close),
-                    title: const Text('Annuler'),
-                    onTap: () => Navigator.pop(context, null),
-                  ),
-                ],
+        onTap: () => _showActions(context, accent),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFEAECEF)),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                blurRadius: 12,
+                offset: Offset(0, 8),
+                color: Color(0x0F000000),
               ),
-            ),
-          );
-
-          if (action == 'delete') {
-            try {
-              await FirebaseFirestore.instance
-                  .collection('rendezvous')
-                  .doc(id)
-                  .delete();
-              // ignore: use_build_context_synchronously
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Rendez-vous supprimé')),
-              );
-            } catch (e) {
-              // ignore: use_build_context_synchronously
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erreur lors de la suppression: $e')),
-              );
-            }
-          } else if (action == 'edit') {
-            final docSnapshot = await FirebaseFirestore.instance
-                .collection('rendezvous')
-                .doc(id)
-                .get();
-            if (docSnapshot.exists) {
-              // ignore: use_build_context_synchronously
-              showEditRendezVousSheet(context, id, docSnapshot.data()!);
-            }
-          }
-        },
-
-        child: Padding(
-          padding: const EdgeInsets.all(18),
+            ],
+          ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icone dans cercle avec accessibilité
-              Semantics(
-                label: 'Type de rendez-vous: $description',
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(14),
-                  child: Icon(icon, color: iconColor, size: 32),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
+                child: Icon(icon, color: accent, size: 26),
               ),
-              const SizedBox(width: 20),
-              // Infos rendez-vous
+              const SizedBox(width: 12),
+              // Infos
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Participant + badge description
+                    // Ligne 1 : Participant + badge
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            participant,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
+                            participant.isEmpty ? 'Famille' : participant,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                              color: Color(0xFF0F172A),
+                            ),
                           ),
                         ),
                         Container(
-                          margin: const EdgeInsets.only(left: 8),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 10,
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: iconColor.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(14),
+                            color: accent.withValues(alpha: 0.16),
+                            borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            description,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: iconColor,
+                            description.isEmpty ? 'Rendez-vous' : description,
+                            style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                              fontSize: 12.5,
+                              color: accent,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-                    // Date et heure
+                    const SizedBox(height: 8),
+                    // Ligne 2 : date + heure
                     Row(
                       children: [
                         const Icon(
                           Icons.calendar_today,
-                          size: 18,
-                          color: Colors.grey,
+                          size: 16,
+                          color: Color(0xFF94A3B8),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             formattedDate,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.black87.withValues(alpha: 0.7),
-                            ),
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Color(0xFF475569)),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         const Icon(
                           Icons.access_time,
-                          size: 18,
-                          color: Colors.grey,
+                          size: 16,
+                          color: Color(0xFF94A3B8),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           formattedTime,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.black87.withValues(alpha: 0.7),
-                          ),
+                          style: const TextStyle(color: Color(0xFF475569)),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 8),
-
-                    // Nom du médecin
-                    Row(
-                      children: [
-                        const Icon(Icons.person, size: 18, color: Colors.grey),
-                        const SizedBox(width: 6),
-                        Text(
-                          "Dr $medecin",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.black87.withValues(alpha: 0.7),
+                    const SizedBox(height: 6),
+                    // Ligne 3 : praticien
+                    if (medecin.isNotEmpty)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.person,
+                            size: 16,
+                            color: Color(0xFF94A3B8),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Dr $medecin',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Color(0xFF475569)),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.more_horiz),
+                onPressed: () => _showActions(context, accent),
+                tooltip: 'Options',
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showActions(BuildContext context, Color accent) async {
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        final dateStr = DateFormat(
+          'dd MMM yyyy • HH:mm',
+          'fr_FR',
+        ).format(datetime);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(_iconFor(description), color: accent),
+                  ),
+                  title: Text(
+                    (description.isEmpty ? 'Rendez-vous' : description),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(
+                    '${participant.isEmpty ? "Famille" : participant} • $dateStr',
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Modifier
+                _ActionRow(
+                  icon: Icons.edit,
+                  label: 'Modifier le rendez-vous',
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    final snap = await FirebaseFirestore.instance
+                        .collection('rendezvous')
+                        .doc(id)
+                        .get();
+                    if (snap.exists && ctx.mounted) {
+                      // ignore: use_build_context_synchronously
+                      showEditRendezVousSheet(context, id, snap.data()!);
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 8),
+
+                // Supprimer
+                _ActionRow(
+                  icon: Icons.delete_outline,
+                  label: 'Supprimer le rendez-vous',
+                  danger: true,
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('rendezvous')
+                          .doc(id)
+                          .delete();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Rendez-vous supprimé')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Erreur lors de la suppression : $e'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/* ===================== Composants UI réutilisables ===================== */
+
+class _ActionRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool danger;
+
+  const _ActionRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = danger ? const Color(0xFFDC2626) : const Color(0xFF0F172A);
+    return ListTile(
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: danger ? const Color(0xFFFEE2E2) : const Color(0xFFEFF6FF),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(fontWeight: FontWeight.w600, color: color),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+    );
+  }
+}
+
+class _LoadingState extends StatelessWidget {
+  const _LoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      itemCount: 3,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, __) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFEAECEF)),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 10,
+              offset: Offset(0, 6),
+              color: Color(0x0F000000),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  final String? message;
+  const _EmptyState({this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.event_busy, size: 64, color: Color(0xFF94A3B8)),
+            const SizedBox(height: 12),
+            Text(
+              message ?? 'Aucun rendez-vous',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
+            ),
+          ],
         ),
       ),
     );
