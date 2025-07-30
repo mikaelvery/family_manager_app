@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/screens/vacations_screen.dart';
+import 'package:family_manager_app/widgets/add_task_button.dart';
 import 'package:family_manager_app/widgets/icon_data.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:family_manager_app/widgets/show_addvacation_sheet.dart';
@@ -329,34 +330,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
-                  GestureDetector(
+                  HomeAddTaskButton(
                     onTap: () => showAddTaskSheet(context),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFF5F6D), Color(0xFFFFC371)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.add_task, color: Colors.black87),
-                          SizedBox(width: 8),
-                          Text(
-                            'Ajouter une tâche',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 12),
                   taskChecklist(context),
