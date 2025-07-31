@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<List<CalendarEvent>> fetchEventsFromFirebase() async {
     final List<CalendarEvent> events = [];
 
-    // Récupérer les rendezvous
+    // Récupere les rendezvous
     final rendezvousSnapshot = await FirebaseFirestore.instance
         .collection('rendezvous')
         .get();
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
       events.add(CalendarEvent.fromMap(data, doc.id));
     }
 
-    // Récupérer les tasks
+    // Récupere les tasks
     final tasksSnapshot = await FirebaseFirestore.instance
         .collection('tasks')
         .get();
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
       events.add(CalendarEvent.fromMap(data, doc.id));
     }
 
-    // Récupérer les vacances
+    // Récupere les vacances
     final vacationsSnapshot = await FirebaseFirestore.instance
         .collection('vacations')
         .get();
@@ -453,7 +453,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       );
 
-                      // 👇 On revient ici : reset la timeline sur aujourd'hui
                       timelineKey.currentState?.resetToToday();
                     },
                   ),
