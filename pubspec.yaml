@@ -30,6 +30,8 @@ dependencies:
   open_filex: ^4.7.0
   font_awesome_flutter: ^10.8.0
   badges: ^3.1.2
+  table_calendar: ^3.2.0
+
   cupertino_icons: ^1.0.8
   
   flutter_localizations:
@@ -66,6 +68,7 @@ flutter:
     - assets/avatar_femme.png
     - assets/icon.png
     - assets/images/bg_liquid.png
+    - assets/images/cake.png 
     - .env
     - .env.local
 

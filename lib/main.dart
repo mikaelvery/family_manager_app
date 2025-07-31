@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Handler pour la notification en background (obligatoire)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -17,6 +18,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
   await dotenv.load(fileName: ".env");
   // Init Firebase
   await Firebase.initializeApp();
@@ -77,8 +79,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('fr'),
       supportedLocales: const [
-        Locale('fr'),
-        Locale('en'),
+        Locale('fr')
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

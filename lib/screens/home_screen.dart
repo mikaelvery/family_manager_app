@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:family_manager_app/models/calendar_event.dart';
+import 'package:family_manager_app/screens/calendar_screen.dart';
 import 'package:family_manager_app/screens/appointments_screen.dart';
 import 'package:family_manager_app/screens/documents_screen.dart';
 import 'package:family_manager_app/screens/vacations_screen.dart';
@@ -8,6 +10,7 @@ import 'package:family_manager_app/widgets/add_task_button.dart';
 import 'package:family_manager_app/widgets/icon_data.dart';
 import 'package:family_manager_app/widgets/pick__upload_document.dart';
 import 'package:family_manager_app/widgets/show_addvacation_sheet.dart';
+import 'package:family_manager_app/widgets/timeline_week.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,12 +31,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _userName;
   bool showAllAppointments = false;
   Timer? _greetingTimer;
+  DateTime selectedDate = DateTime.now();
+  List<CalendarEvent> events = [];
+  bool loading = true;
+  final GlobalKey<WeekDateTimelineState> timelineKey = GlobalKey();
 
   String greetingForNow() {
     final h = DateTime.now().hour;
     return (h >= 18 || h < 5) ? 'Bonsoir' : 'Bonjour';
   }
-   void scheduleGreetingRefresh() {
+
+  void scheduleGreetingRefresh() {
     final now = DateTime.now();
     DateTime next;
     if (now.hour < 5) {
@@ -49,15 +57,24 @@ class _HomeScreenState extends State<HomeScreen> {
     _greetingTimer = Timer(next.difference(now), () {
       if (!mounted) return;
       setState(() {});
+      loadEvents();
       scheduleGreetingRefresh();
     });
   }
-  
+
   @override
   void initState() {
     super.initState();
     _loadUserName();
     scheduleGreetingRefresh();
+    fetchEvents();
+  }
+
+  Future<void> fetchEvents() async {
+    final allEvents = await fetchEventsFromFirebase(); 
+    setState(() {
+      events = allEvents;
+    });
   }
 
   @override
@@ -65,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _greetingTimer?.cancel();
     super.dispose();
   }
-  
+
   void deleteExpiredTasks() {
     final now = DateTime.now();
     final batch = FirebaseFirestore.instance.batch();
@@ -102,6 +119,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> loadEvents() async {
+    final loadedEvents = await fetchEventsFromFirebase();
+    setState(() {
+      events = loadedEvents;
+      loading = false;
+    });
+  }
+
   // Chargement du nom de l'utilisateur depuis Firestore
   Future<void> _loadUserName() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -120,6 +145,51 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     }
+  }
+
+  Future<List<CalendarEvent>> fetchEventsFromFirebase() async {
+    final List<CalendarEvent> events = [];
+
+    // Récupérer les rendezvous
+    final rendezvousSnapshot = await FirebaseFirestore.instance
+        .collection('rendezvous')
+        .get();
+    for (var doc in rendezvousSnapshot.docs) {
+      final data = doc.data();
+      data['type'] = 'rendezvous';
+      events.add(CalendarEvent.fromMap(data, doc.id));
+    }
+
+    // Récupérer les tasks
+    final tasksSnapshot = await FirebaseFirestore.instance
+        .collection('tasks')
+        .get();
+    for (var doc in tasksSnapshot.docs) {
+      final data = doc.data();
+      data['type'] = 'task';
+      events.add(CalendarEvent.fromMap(data, doc.id));
+    }
+
+    // Récupérer les vacances
+    final vacationsSnapshot = await FirebaseFirestore.instance
+        .collection('vacations')
+        .get();
+    for (var doc in vacationsSnapshot.docs) {
+      final data = doc.data();
+      data['type'] = 'vacation';
+      events.add(CalendarEvent.fromMap(data, doc.id));
+    }
+
+    final birthdaySnapshot = await FirebaseFirestore.instance
+        .collection('birthdays')
+        .get();
+    for (var doc in birthdaySnapshot.docs) {
+      final data = doc.data();
+      data['type'] = 'birthday';
+      events.add(CalendarEvent.fromMap(data, doc.id));
+    }
+
+    return events;
   }
 
   @override
@@ -358,6 +428,36 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
+                  const SizedBox(height: 32),
+
+                  const Text(
+                    'Agenda Hebdomadaire',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+
+                 WeekDateTimeline(
+                    key: timelineKey,
+                    initialDate: selectedDate,
+                    onDateSelected: (date) {
+                      setState(() {
+                        selectedDate = date;
+                      });
+                    },
+                    events: events,
+                    onVoirToutPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CalendarScreen(events: events),
+                        ),
+                      );
+
+                      // 👇 On revient ici : reset la timeline sur aujourd'hui
+                      timelineKey.currentState?.resetToToday();
+                    },
+                  ),
+
                   const SizedBox(height: 32),
                   const Text(
                     'Liste de tâches, rappels',

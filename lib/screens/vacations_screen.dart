@@ -61,7 +61,7 @@ class _VacationsScreenState extends State<VacationsScreen> {
     if (m >= 3 && m <= 5) {
       return const Color(0xFF10B981); 
     }
-    return const Color(0xFF8B5CF6); // automne -> violet
+    return const Color(0xFF8B5CF6); 
   }
 
   IconData _seasonIcon(DateTime start) {
