@@ -28,8 +28,8 @@ class WeekDateTimelineState extends State<WeekDateTimeline> {
   void initState() {
     super.initState();
     selectedDate = widget.initialDate;
-    final daysBefore = 2; // nombre de jours avant la date du jour
-    final totalDays = 6; // total de jours 
+    final daysBefore = 2; 
+    final totalDays = 6;  
     final today = DateTime.now();
     weekDays = List.generate(
       totalDays,
